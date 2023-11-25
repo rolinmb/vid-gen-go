@@ -35,30 +35,30 @@ func savePng(fname string, newPng *image.RGBA) {
 }
 */
 func savePngWg(wg *sync.WaitGroup, pngdir,fname string, newPng *image.RGBA) {
-  defer wg.Done()
-  _, err := os.Stat("png_out/"+pngdir)
-  if err != nil {
-    if os.IsNotExist(err) {
-      mkdir_err := os.Mkdir("png_out/"+pngdir, 0755)
-      if mkdir_err != nil {
-        fmt.Println(mkdir_err)
-      }
-      fmt.Println("Created directory png_out/"+pngdir)
-    } else {
-      log.Fatal(err)
-      return
+    defer wg.Done()
+    _, err := os.Stat("png_out/"+pngdir)
+    if err != nil {
+        if os.IsNotExist(err) {
+            mkdir_err := os.Mkdir("png_out/"+pngdir, 0755)
+            if mkdir_err != nil {
+                fmt.Println(mkdir_err)
+            }
+            fmt.Println("Created directory png_out/"+pngdir)
+        } else {
+            log.Fatal(err)
+            return
+        }
     }
-  }
-  fout, err := os.Create(fname)
-  if err != nil {
-    log.Fatal(err)
-  }
-  defer fout.Close()
-  err = png.Encode(fout, newPng)
-  if err != nil {
-    log.Fatal(err)
-  }
-  fmt.Println("Successfully created/rewritten", fname)
+    fout, err := os.Create(fname)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer fout.Close()
+    err = png.Encode(fout, newPng)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println("Successfully created/rewritten", fname)
 }
 
 func clamp(value,min,max int) int {
@@ -158,12 +158,12 @@ func runFfmpegOne(pngDir,pngName,vidName string) {
 }
 
 func simpleCleanup(pngdir,pngname string, FRAMES int) {
-  for i := 1; i < FRAMES+1; i++ {
-    err := os.Remove("png_out/"+pngdir+"/"+pngname+"_"+strconv.FormatInt(int64(((FRAMES*2)-1)-(i-1)), 10)+".png")
-    if err != nil {
-      log.Fatal(err)
+    for i := 1; i < FRAMES+1; i++ {
+        err := os.Remove("png_out/"+pngdir+"/"+pngname+"_"+strconv.FormatInt(int64(((FRAMES*2)-1)-(i-1)), 10)+".png")
+        if err != nil {
+            log.Fatal(err)
+        }
     }
-  }
 }
 
 func routineSimple(pngDir,pngName,vidName string, FRAMES int, AMP,FREQ,MULTIPLIER,PHASE,SCALE float64) {
@@ -307,34 +307,34 @@ func runFfmpegInterp(pngDir,pngName,vidName string) {
 }
 
 func interpCleanup(pngDir,pngName string, FRAMES int) {
-  var wg sync.WaitGroup
-  var err error
-  for i := 1; i < FRAMES+1; i++ {
-    idx := int64(((FRAMES*2)-1)-(i-1))
-    wg.Add(3)
-    go func() {
-      defer wg.Done()
-      err = os.Remove("png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(idx, 10)+"a.png")
-      if err != nil {
-        log.Fatal(err)
-      }
-    }()
-    go func() {
-      defer wg.Done()
-      err = os.Remove("png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(idx, 10)+"b.png")
-      if err != nil {
-        log.Fatal(err)
-      }
-    }()
-    go func(){
-      defer wg.Done()
-      err = os.Remove("png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(idx, 10)+"i.png")
-      if err != nil {
-        log.Fatal(err)
-      }
-    }()
-  }
-  wg.Wait()
+    var wg sync.WaitGroup
+    var err error
+    for i := 1; i < FRAMES+1; i++ {
+        idx := int64(((FRAMES*2)-1)-(i-1))
+        wg.Add(3)
+        go func() {
+            defer wg.Done()
+            err = os.Remove("png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(idx, 10)+"a.png")
+            if err != nil {
+                log.Fatal(err)
+            }
+        }()
+        go func() {
+            defer wg.Done()
+            err = os.Remove("png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(idx, 10)+"b.png")
+            if err != nil {
+                log.Fatal(err)
+            }
+        }()
+        go func(){
+            defer wg.Done()
+            err = os.Remove("png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(idx, 10)+"i.png")
+            if err != nil {
+                log.Fatal(err)
+            }
+        }()
+    }
+    wg.Wait()
 }
 
 func routineInterp(
@@ -357,8 +357,47 @@ func routineInterp(
     interpCleanup(pngDir, pngName, FRAMES)
 }
 
+func routineOverlay(fInName,fOutName string, cropWidth int) {
+    fIn, err := os.Open(fInName) 
+    if err != nil {
+        log.Fatal(err)
+        return
+    }
+    defer fIn.Close()
+    img, _, err := image.Decode(fIn)
+    if err != nil {
+        log.Fatal(err)
+        return
+    }
+    bounds := img.Bounds()
+    width := bounds.Max.Y
+    height := bounds.Max.X
+    if cropWidth > width || cropWidth > height {
+        log.Fatal("Crop size is larger than input .png dimensions")
+	return
+    }
+    startX := (height - cropWidth) / 2
+    startY := (width - cropWidth) / 2
+    cropRect := image.Rect(startX, startY, startX+cropWidth, startY+cropWidth)
+    croppedImg := img.(interface {
+        SubImage(r image.Rectangle) image.Image
+    }).SubImage(cropRect)
+    fOut, err := os.Create(fOutName)
+    if err != nil {
+        log.Fatal(err)
+	return
+    }
+    defer fOut.Close()
+    err = png.Encode(fOut, croppedImg)
+    if err != nil {
+        log.Fatal(err)
+	return
+    }
+    fmt.Printf("\nImage cropped and saved successfully to %s\n", fOutName)
+}
+
 func main() {
-    routineSimple(
+    /*routineSimple(
         "trial2",          // pngDir
         "trial2_10232023", // pngName
         "trial2_10232023", // vidName
@@ -368,8 +407,8 @@ func main() {
         0.777,             // MULTIPLIER
         0.0,               // PHASE
         0.5,               // SCALE
-    )
-    routineInterp(
+    )*/
+    /*routineInterp(
         "trial4",          // pngDir
         "trial4_10232023", // pngName
         "trial4_10232023", // vidName
@@ -385,5 +424,6 @@ func main() {
         0.5,               // SCALE1
         0.333,               // SCALE2
         0.5,               // INTERPFACTOR
-    )
+    )*/
+    routineOverlay("png_in/IMG_0520.png", "png_in/new.png", 1400)
 }
