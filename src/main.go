@@ -558,7 +558,7 @@ func routineOverlay(
         log.Fatal(err)
 	    return
     }
-    fmt.Printf("\nImage cropped and saved successfully to %s\n", fOutName)
+    fmt.Printf("\nImage cropped and saved successfully to %s\n\n", fOutName)
     var fNameInc,fNameDec string
     var COMPL1,COMPL2,CLRFACTOR1,CLRFACTOR2 float64
     for i := 1; i < FRAMES+1; i++ {
@@ -595,7 +595,7 @@ func routineOverlay(
 }
 
 func main() {
-    fmt.Println("[main.go : routineSimple() started]")
+    /*fmt.Println("[main.go : routineSimple() started]")
     routineSimple(
         "trial1",          // pngDir
         "trial1_11262023", // pngName
@@ -631,7 +631,7 @@ func main() {
         0.5,   // SCALE1
         0.333, // SCALE2
         0.5,   // INTERPFACTOR
-    )
+    )*/
     fmt.Println("[main.go : routineOverlay() started]")
     routineOverlay(
         "png_in/IMG_0520.png",  // fInName
@@ -643,16 +643,16 @@ func main() {
 	    "sin(3*x) + sin(4*y)", // EXPRESSION2
         1512,  // cropWidth
 	    1512,  // cropHeight
-        100,    // FRAMES
-        2.1,   // AMP1
-        3.33,   // AMP2
-        0.01,  // FREQ1
-        0.02,  // FREQ2
-        1.5,   // MULTIPLIER1
-        1.0,   // MULTIPLIER2
-        0.01,  // PHASE1
-        0.02,  // PHASE2
-        0.01,  // SCALE1
-        0.01,  // SCALE2
+        120,    // FRAMES
+        1.1,   // AMP1
+        1.5,   // AMP2
+        0.1,  // FREQ1
+        0.01,  // FREQ2
+        10.777,   // MULTIPLIER1
+        5.1,   // MULTIPLIER2
+        0.0,  // PHASE1
+        0.0,  // PHASE2
+        0.1,  // SCALE1
+        1.0,  // SCALE2
     )
 }
