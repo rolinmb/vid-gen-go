@@ -4,6 +4,10 @@ import (
     "fmt"
     "log"
     "math"
+    "go/parser"
+    "go/token"
+    "go/ast"
+    "reflect"
     "strconv"
     "image"
     "image/color"
@@ -11,11 +15,10 @@ import (
     "os"
     "os/exec"
     "sync"
+
 )
 
 const (
-    WIDTH = 1600
-    HEIGHT = 1600
     dist_amp = 0.01
     dist_freq = 0.1
     dist_phase = 0.001
@@ -71,17 +74,17 @@ func clamp(value,min,max int) int {
 	return value
 }
 
-func getPixelColorOne(x,y int, SCALE,COMPL,CLRFACTOR float64) (uint8, uint8, uint8) {
+func getPixelColorOne(x,y,WIDTH,HEIGHT int, SCALE,COMPL,CLRFACTOR float64) (uint8, uint8, uint8) {
     // angle := (math.Pi * SCALE * math.Sin(float64(x*x*y/5))) // Change to +/-/* or divide/modulus by x+1 or y+1
     // angle := math.Pi * SCALE * (math.Cos(float64(x+y))*0.2)
     // angle := math.Pi * SCALE * math.Tan(float64(x+(y/((x*y)+1))) - math.Sin(float64(x*y)*0.1))
     // angle := math.Pi * 2.0 * SCALE *  math.Sqrt(float64(x*x+y*y)) // circular gradient
-    angle := math.Pi * SCALE * math.Sin(float64(x)*0.1) + math.Pi * SCALE * math.Sin(float64(y)*0.1) // sine wave ripple
+    // angle := math.Pi * SCALE * math.Sin(float64(x)*0.1) + math.Pi * SCALE * math.Sin(float64(y)*0.1) // sine wave ripple
     // angle := math.Pi * SCALE * (1 / (float64(x)*float64(x) + float64(y)*float64(y) + 1))  // hyperbolic spiral
     // angle := math.Pi * SCALE * float64(x*x+y*y)  // square
     // angle := math.Pi * SCALE * math.Exp(-0.01 * math.Sqrt(float64(x*x+y*y)))  // exponential decay
     // angle := math.Pi * SCALE * math.Sin(0.1*float64(x)+0.1*float64(y)) + math.Pi/4  // offset sine wave
-    // angle := math.Pi * SCALE * math.Sin(3*float64(x)) + math.Pi * SCALE * math.Sin(4*float64(y))  // lissajous curve
+    angle := math.Pi * SCALE * math.Sin(3*float64(x)) + math.Pi * SCALE * math.Sin(4*float64(y))  // lissajous curve
     // angle := math.Pi * SCALE * math.Cos(3*float64(x*y)) + math.Pi * SCALE * math.Sin(4*float64(y))
     // angle := math.Pi * SCALE * math.Abs(float64(x)-WIDTH/2) + math.Pi * SCALE * math.Abs(float64(y)-HEIGHT/2) // diamond
     // angle := math.Pi * SCALE * (float64(x)/10 + float64(y)/5) + math.Pi * SCALE * math.Sin(2*float64(x))  // hypotochoid
@@ -114,22 +117,24 @@ func getPixelColorOne(x,y int, SCALE,COMPL,CLRFACTOR float64) (uint8, uint8, uin
     r := uint8((math.Sin(trippyAngle) + 1) * 127.5 * CLRFACTOR)
     g := uint8((math.Sin(trippyAngle+2*math.Pi/3) + 1) * 127.5 * CLRFACTOR)
     b := uint8((math.Sin(trippyAngle+4*math.Pi/3) + 1) * 127.5 * CLRFACTOR)*/
-    // Main RGB functions
     distance := math.Sqrt(math.Pow(float64(x-WIDTH/2), 2) + math.Pow(float64(y-HEIGHT/2), 2))
 	frequency := distance * SCALE
     r := uint8(math.Sin(angle * COMPL + frequency) * CLRFACTOR + 128)
     g := uint8(math.Sin(angle * COMPL + frequency + 2*math.Pi/3) * CLRFACTOR + 128)
     b := uint8(math.Sin(angle * COMPL + frequency + 4*math.Pi/3) * CLRFACTOR + 128)
-    return r, g, b
+    return r,g,b
 }
 
-func generateSimplePng(pngDir,fnameInc,fnameDec string, AMP,COMPL,CLRFACTOR,FREQ,PHASE,SCALE float64) {
+func generateSimplePng(
+    pngDir,fnameInc,fnameDec string,
+    WIDTH,HEIGHT int,
+    AMP,COMPL,CLRFACTOR,FREQ,PHASE,SCALE float64) {
     var wg sync.WaitGroup
     newPng := image.NewRGBA(image.Rect(0, 0, WIDTH, HEIGHT))
     for x := 0; x < WIDTH; x++ {
         for y := 0; y < HEIGHT; y++ {
-            dx, dy := distort(x, y, AMP, FREQ, PHASE)
-            r, g, b := getPixelColorOne(dx, dy, SCALE, COMPL, CLRFACTOR)
+            dx, dy := distort(x, y, WIDTH, HEIGHT, AMP, FREQ, PHASE)
+            r, g, b := getPixelColorOne(dx, dy, WIDTH, HEIGHT, SCALE, COMPL, CLRFACTOR)
             newPng.Set(x, y, color.RGBA{r, g, b, 255})
         }
     }
@@ -166,18 +171,21 @@ func simpleCleanup(pngdir,pngname string, FRAMES int) {
     }
 }
 
-func routineSimple(pngDir,pngName,vidName string, FRAMES int, AMP,FREQ,MULTIPLIER,PHASE,SCALE float64) {
+func routineSimple(
+    pngDir,pngName,vidName string,
+    WIDTH,HEIGHT,FRAMES int,
+    AMP,FREQ,MULTIPLIER,PHASE,SCALE float64) {
     var fnameInc,fnameDec string
     for i := 1; i < FRAMES+1; i++ {
         fnameInc = "png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(int64(i-1), 10)+".png"
         fnameDec = "png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(int64(((FRAMES*2)-1)-(i-1)), 10)+".png"
-        generateSimplePng(pngDir, fnameInc, fnameDec, AMP, MULTIPLIER*float64(i), float64(4*i-1), FREQ, PHASE, SCALE)
+        generateSimplePng(pngDir, fnameInc, fnameDec, WIDTH, HEIGHT, AMP, MULTIPLIER*float64(i), float64(4*i-1), FREQ, PHASE, SCALE)
     }
     runFfmpegOne(pngDir, pngName, vidName)
     simpleCleanup(pngDir, pngName, FRAMES)
 }
 
-func getPixelColorTwo(x,y int, SCALE,COMPL,CLRFACTOR float64) (uint8, uint8, uint8) {
+func getPixelColorTwo(x,y,WIDTH,HEIGHT int, SCALE,COMPL,CLRFACTOR float64) (uint8, uint8, uint8) {
 	// angle := math.Pi * SCALE * (float64(x)/10 + float64(y)/5) + math.Pi * SCALE * math.Sin(2*float64(x))  // hypotochoid
 	// angle := math.Pi * SCALE * math.Sin(3*float64(x)) + math.Pi * SCALE * math.Sin(4*float64(y)) // lissajous curve
 	// angle := math.Pi * SCALE * math.Sin(0.1*float64(x)+0.1*float64(y)) + math.Pi/4  // offset sine wave
@@ -187,7 +195,8 @@ func getPixelColorTwo(x,y int, SCALE,COMPL,CLRFACTOR float64) (uint8, uint8, uin
 	// angle := math.Pi * SCALE * math.Exp(-0.01 * math.Sqrt(float64(x*x+y*y)))  // exponential decay
 	// angle := math.Pi * 2.0 * SCALE *  math.Sqrt(float64(x*x+y*y)) // circular gradient
 	// angle := math.Pi * SCALE * math.Cos(3*float64(x*y)) + math.Pi * SCALE * math.Sin(4*float64(y))
-	angle := math.Pi * 2.0 * SCALE *  math.Sqrt(float64(x*x+y*y))
+    angle := math.Pi * SCALE * ((math.Sin(float64(x)*0.1) + math.Sin(float64(y)*0.1)) / (1 + math.Sqrt(float64(x*x+y*y))))
+	// angle := math.Pi * 2.0 * SCALE *  math.Sqrt(float64(x*x+y*y))
 	/*// Remix Set 1 Generators
     centerX := float64(WIDTH) / 2
     centerY := float64(HEIGHT) / 2
@@ -201,19 +210,19 @@ func getPixelColorTwo(x,y int, SCALE,COMPL,CLRFACTOR float64) (uint8, uint8, uin
     r := uint8(math.Sin(angle * COMPL + frequency) * CLRFACTOR + 128)
     g := uint8(math.Sin(angle * COMPL + frequency + 2*math.Pi/3) * CLRFACTOR + 128)
     b := uint8(math.Sin(angle * COMPL + frequency + 4*math.Pi/3) * CLRFACTOR + 128)
-    return r, g, b
+    return r,g,b
 }
 
-func distort(x,y int, AMP,FREQ,PHASE float64) (int, int) {
+func distort(x,y,WIDTH,HEIGHT int, AMP,FREQ,PHASE float64) (int, int) {
     dx := y + int(AMP * math.Sin(FREQ*float64(x)+PHASE))
     dy := x + int(AMP * math.Sin(FREQ * float64(y) + PHASE))
 	dx = clamp(dx, 0, WIDTH-1)
 	dy = clamp(dy, 0, HEIGHT-1)
-    return dx, dy
+    return dx,dy
 }
 
 func generatePngInterp(
-    iterUp,iterDown int,
+    iterUp,iterDown,WIDTH,HEIGHT int,
     pngDir,pngName string,
     AMP1,AMP2,COMPL1,COMPL2,CLRFACTOR1,CLRFACTOR2,FREQ1,FREQ2,PHASE1,PHASE2,SCALE1,SCALE2,INTERPFACTOR float64) {
     var wg sync.WaitGroup
@@ -222,10 +231,10 @@ func generatePngInterp(
     finalPng := image.NewRGBA(image.Rect(0, 0, WIDTH, HEIGHT))
     for x := 0; x < WIDTH; x++ {
         for y := 0; y < HEIGHT; y++ {
-            dx1, dy1 := distort(x, y, AMP1, FREQ1, PHASE1)
-            dx2, dy2 := distort(x, y, AMP2, FREQ2, PHASE2)
-            r1, g1, b1 := getPixelColorOne(dx1, dy1, SCALE1, COMPL1, CLRFACTOR1)
-            r2, g2, b2 := getPixelColorTwo(dx2, dy2, SCALE2, COMPL2, CLRFACTOR2)
+            dx1,dy1 := distort(x, y, WIDTH, HEIGHT, AMP1, FREQ1, PHASE1)
+            dx2,dy2 := distort(x, y, WIDTH, HEIGHT, AMP2, FREQ2, PHASE2)
+            r1,g1,b1 := getPixelColorOne(dx1, dy1, WIDTH, HEIGHT, SCALE1, COMPL1, CLRFACTOR1)
+            r2,g2,b2 := getPixelColorTwo(dx2, dy2, WIDTH, HEIGHT, SCALE2, COMPL2, CLRFACTOR2)
             newPngA.Set(x, y, color.RGBA{r1, g1, b1, 255})
             newPngB.Set(x, y, color.RGBA{r2, g2, b2, 255})
             r := uint8(float64(r1)*(float64(1)-INTERPFACTOR) + float64(r2)*INTERPFACTOR)
@@ -339,7 +348,7 @@ func interpCleanup(pngDir,pngName string, FRAMES int) {
 
 func routineInterp(
     pngDir,pngName,vidName string,
-    FRAMES int,
+    WIDTH,HEIGHT,FRAMES int,
     AMP1,AMP2,FREQ1,FREQ2,MULTIPLIER1,MULTIPLIER2,PHASE1,PHASE2,SCALE1,SCALE2,INTERPFACTOR float64) {
     var COMPL1,COMPL2,CLRFACTOR1,CLRFACTOR2 float64
 	for i := 1; i < FRAMES+1; i++ {
@@ -348,7 +357,7 @@ func routineInterp(
         CLRFACTOR1 = float64(4*i-1)
         CLRFACTOR2 = float64(2*i+1)
         generatePngInterp(
-            i-1,((FRAMES*2)-1)-(i-1),
+            i-1,((FRAMES*2)-1)-(i-1),WIDTH,HEIGHT,
             pngDir,pngName,
             AMP1,AMP2,COMPL1,COMPL2,CLRFACTOR1,CLRFACTOR2,FREQ1,FREQ2,PHASE1,PHASE2,SCALE1,SCALE2,INTERPFACTOR,
         )
@@ -357,29 +366,218 @@ func routineInterp(
     interpCleanup(pngDir, pngName, FRAMES)
 }
 
-func routineOverlay(fInName,fOutName string, cropWidth int) {
+
+func evaluateASTNode(node interface{}, vars map[string]int) (float64, error) {
+    switch n := node.(type) {
+    case *ast.BasicLit:
+        if n.Kind == token.INT {
+            val, err := strconv.Atoi(n.Value)
+            if err != nil {
+                return 0, err
+            }
+            return float64(val), nil
+        } else if n.Kind == token.FLOAT {
+            val, err := strconv.ParseFloat(n.Value, 64)
+            if err != nil {
+                return 0, err
+            }
+            return val, nil
+        }
+    case *ast.Ident:
+        varName := n.Name
+        if val, ok := vars[varName]; ok {
+            return float64(val), nil
+        }
+        return 0, fmt.Errorf("Undefined variable: %s", varName)
+    case *ast.CallExpr:
+        funcName := n.Fun.(*ast.Ident).Name
+        args := n.Args
+        if funcName == "sin" && len(args) == 1 {
+            argVal, err := evaluateASTNode(args[0], vars)
+            if err != nil {
+                return 0, err
+            }
+            return math.Sin(argVal), nil
+        } else if funcName == "cos" && len(args) == 1 {
+            argVal, err := evaluateASTNode(args[0], vars)
+            if err != nil {
+                return 0, err
+            }
+            return math.Cos(argVal), nil
+        } else if funcName == "tan" && len(args) == 1 {
+            argVal, err := evaluateASTNode(args[0], vars)
+            if err != nil {
+                return 0, err
+            }
+            return math.Tan(argVal), nil
+        } else if funcName == "exp" && len(args) == 1 {
+            argVal, err := evaluateASTNode(args[0], vars)
+            if err != nil {
+                return 0, err
+            }
+            return math.Exp(argVal), nil
+        } else if funcName == "sqrt" && len(args) == 1 {
+            argVal1, err := evaluateASTNode(args[0], vars)
+            if err != nil {
+                return 0, err
+            }
+            return math.Sqrt(argVal1), nil
+        } else if funcName == "abs" && len(args) == 1 {
+            argVal1, err := evaluateASTNode(args[0], vars)
+            if err != nil {
+                return 0, err
+            }
+            return math.Abs(argVal1), nil
+        } else if funcName == "pow" && len(args) == 2 {
+            argVal1, err := evaluateASTNode(args[0], vars)
+            if err != nil {
+                return 0, err
+            }
+            argVal2, err := evaluateASTNode(args[1], vars)
+            if err != nil {
+                return 0, err
+            }
+            return math.Pow(argVal1, argVal2), nil
+        }
+    case *ast.BinaryExpr:
+        left, err := evaluateASTNode(n.X, vars)
+        if err != nil {
+            return 0, err
+        }
+        right, err := evaluateASTNode(n.Y, vars)
+        if err != nil {
+        return 0, err
+        }
+        switch n.Op {
+        case token.ADD:
+            return left + right, nil
+        case token.SUB:
+            return left - right, nil
+        case token.MUL:
+            return left * right, nil
+        case token.QUO:
+            return left / right, nil
+        }
+    case *ast.ParenExpr:
+        return evaluateASTNode(n.X, vars)
+    case *ast.UnaryExpr:
+        operand, err := evaluateASTNode(n.X, vars)
+        if err != nil {
+        return 0, err
+        }
+        switch n.Op {
+        case token.ADD:
+            return operand, nil
+        case token.SUB:
+            return -operand, nil
+        }
+    }
+    return 0, fmt.Errorf("Unsupported expression: %s", reflect.TypeOf(node))
+}
+
+func getPixelColorCustom(
+    x,y,WIDTH,HEIGHT int,
+    SCALE,COMPL,CLRFACTOR float64,
+    expr interface{}) (uint8, uint8, uint8) {
+    vars := map[string]int{"x": x, "y": y}
+    result, err := evaluateASTNode(expr, vars)
+    if err != nil {
+        log.Fatal(err)
+	return uint8(0),uint8(0),uint8(0)
+    }
+    angle := math.Pi * SCALE * result
+    distance := math.Sqrt(math.Pow(float64(x-WIDTH/2), 2) + math.Pow(float64(y-HEIGHT/2), 2))
+    frequency := distance * SCALE
+    r := uint8(math.Sin(angle * COMPL + frequency) * CLRFACTOR + 128)
+    g := uint8(math.Sin(angle * COMPL + frequency + 2*math.Pi/2) * CLRFACTOR + 128)
+    b := uint8(math.Sin(angle * COMPL + frequency + 4*math.Pi/3 * CLRFACTOR + 128)) 
+    return r,g,b
+}
+
+func runFfmpegOverlay(pngDir,pngName,vidName string) {
+    ffmpegCmd := exec.Command(
+        "ffmpeg", "-y",
+        "-framerate", "30",
+        "-i", "png_out/"+pngDir+"/"+pngName+"_%d.png",
+        "-c:v", "libx264",  
+        "-pix_fmt", "yuv420p",
+        "vid_out/"+vidName+".mp4",
+    )
+    cmdOut, err := ffmpegCmd.CombinedOutput()
+    fmt.Println("runFfmpegOverlay Output:\n", string(cmdOut))
+    if err != nil {
+        log.Fatal(err)
+        return
+    }
+}
+
+func overlayCleanup(pngDir,pngName string, FRAMES int) {
+    for i := 1; i < (FRAMES+1); i++ {
+        idx := int64(((FRAMES*2)-1)-(i-1))
+        err := os.Remove("png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(idx, 10)+".png")
+        if err != nil {
+            log.Fatal(err)
+            return
+        }
+    }
+}
+
+func routineOverlay(
+    fInName,fOutName,pngDir,pngName,vidName,EXPRESSION1,EXPRESSION2 string,
+    cropWidth,cropHeight,FRAMES int,
+    AMP1,AMP2,FREQ1,FREQ2,MULTIPLIER1,MULTIPLIER2,PHASE1,PHASE2,SCALE1,SCALE2 float64) {
+    if cropWidth == 0 || cropHeight == 0 {
+        log.Fatal("cropWidth or cropHeight cannot be zero")
+        return
+    }
+    if FRAMES == 0 {
+        log.Fatal("FRAMES cannot be zero")
+        return
+    }
+    var expr1, expr2 interface{}
+    var err1,err2 error
+    var wg sync.WaitGroup
+    wg.Add(2)
+    go func() {
+        defer wg.Done()   
+        expr1, err1 = parser.ParseExpr(EXPRESSION1)
+    }()
+    go func() {
+        defer wg.Done()
+        expr2, err2 = parser.ParseExpr(EXPRESSION2)
+    }()
+    wg.Wait()
+    if err1 != nil {
+        log.Fatal(err1)
+        return
+    }
+    if err2 != nil {
+        log.Fatal(err2)
+        return
+    }
+    fmt.Printf("\nSuccessfully parsed input expresions\n (expr1 = %s )\n (expr2 = %s )\n\n", EXPRESSION1, EXPRESSION2)
     fIn, err := os.Open(fInName) 
     if err != nil {
         log.Fatal(err)
         return
     }
     defer fIn.Close()
-    img, _, err := image.Decode(fIn)
+    srcPng, _, err := image.Decode(fIn)
     if err != nil {
         log.Fatal(err)
         return
     }
-    bounds := img.Bounds()
-    width := bounds.Max.Y
-    height := bounds.Max.X
-    if cropWidth > width || cropWidth > height {
-        log.Fatal("Crop size is larger than input .png dimensions")
+    srcBounds := srcPng.Bounds()
+    srcWidth := srcBounds.Max.X
+    srcHeight := srcBounds.Max.Y
+    if cropWidth > srcWidth || cropHeight > srcHeight {
+        log.Fatalf("cropWidth (= %d) or cropHeight (= %d) is larger than input .png dimensions (%dx%d)", cropWidth, cropHeight, srcWidth, srcHeight)
 	return
     }
-    startX := (height - cropWidth) / 2
-    startY := (width - cropWidth) / 2
-    cropRect := image.Rect(startX, startY, startX+cropWidth, startY+cropWidth)
-    croppedImg := img.(interface {
+    startX := (srcWidth - cropWidth) / 2
+    startY := (srcHeight - cropHeight) / 2
+    cropRect := image.Rect(startX, startY, startX+cropWidth, startY+cropHeight)
+    croppedPng := srcPng.(interface {
         SubImage(r image.Rectangle) image.Image
     }).SubImage(cropRect)
     fOut, err := os.Create(fOutName)
@@ -388,42 +586,102 @@ func routineOverlay(fInName,fOutName string, cropWidth int) {
 	return
     }
     defer fOut.Close()
-    err = png.Encode(fOut, croppedImg)
+    err = png.Encode(fOut, croppedPng)
     if err != nil {
         log.Fatal(err)
 	return
     }
     fmt.Printf("\nImage cropped and saved successfully to %s\n", fOutName)
+    var fNameInc,fNameDec string
+    var COMPL1,COMPL2,CLRFACTOR1,CLRFACTOR2 float64
+    for i := 1; i < FRAMES+1; i++ {
+        COMPL1 = MULTIPLIER1*float64(i)
+        COMPL2 = MULTIPLIER2*float64(i)
+        CLRFACTOR1 = float64(3*i-1)
+        CLRFACTOR2 = float64(2*i-1)
+	    pngResult := image.NewRGBA(image.Rect(0, 0, cropWidth, cropHeight))
+        for x := 0; x < cropWidth; x++ {
+            for y := 0; y < cropHeight; y++ {
+                dx1,dy1 := distort(x, y, cropWidth, cropHeight, AMP1, FREQ1, PHASE1)
+                dx2,dy2 := distort(x, y, cropWidth, cropHeight, AMP2, FREQ2, PHASE2)
+                //r1,g1,b1 := getPixelColorOne(dx1, dy1, SCALE1, COMPL1, CLRFACTOR1)
+                r1,g1,b1 := getPixelColorCustom(dx1, dy1, cropWidth, cropHeight, SCALE1, COMPL1, CLRFACTOR1, expr1)
+                //r2,g2,b2 := getPixelColorTwo(dx2, dy2, SCALE2, COMPL2, CLRFACTOR2)
+                r2,g2,b2 := getPixelColorCustom(dx2, dy2, cropWidth, cropHeight, SCALE2, COMPL2, CLRFACTOR2, expr2)
+                rI := uint8(float64(r1)/2 + float64(r2)/2)
+                gI := uint8(float64(g1)/2 + float64(g2)/2)
+                bI := uint8(float64(b1)/2 + float64(b2)/2)   
+                rC,gC,bC, _ := croppedPng.At(x, y).RGBA()
+                r := uint8(float64(rI)/2 + float64(rC)/2)
+                g := uint8(float64(gI)/2 + float64(gC)/2)
+                b := uint8(float64(bI)/2 + float64(bC)/2)
+                pngResult.Set(x, y, color.RGBA{r, g, b, 255})
+            }
+        }
+        fNameInc = "png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(int64(i - 1),10)+".png"
+        fNameDec = "png_out/"+pngDir+"/"+pngName+"_"+strconv.FormatInt(int64(((FRAMES*2)-1)-(i-1)),10)+".png"
+        wg.Add(2)
+        go savePngWg(&wg, pngDir, fNameInc, pngResult)
+        go savePngWg(&wg, pngDir, fNameDec, pngResult) 
+        wg.Wait()
+    }
+    runFfmpegOverlay(pngDir, pngName, vidName)
+    overlayCleanup(pngDir, pngName, FRAMES)
 }
 
 func main() {
     /*routineSimple(
+        "trial1",          // pngDir
+        "trial1_11262023", // pngName
+        "trial1_11262023", // vidName
+        1000,  // WIDTH
+        1000,  // HEIGHT
+        30,    // FRAMES
+        0.222, // AMP
+        0.001, // FREQ
+        0.777, // MULTIPLIER
+        0.0,   // PHASE
+        0.5,   // SCALE
+    )
+    routineInterp(
         "trial2",          // pngDir
-        "trial2_10232023", // pngName
-        "trial2_10232023", // vidName
-        60,                // FRAMES
-        0.222,             // AMP
-        0.001,             // FREQ
-        0.777,             // MULTIPLIER
-        0.0,               // PHASE
-        0.5,               // SCALE
+        "trial2_11262023", // pngName
+        "trial2_11262023", // vidName
+        1000,  // WIDTH
+        1000,  // HEIGHT
+        30,    // FRAMES
+        0.333, // AMP1
+        0.777, // AMP2
+        0.01,  // FREQ1
+        0.05,  // FREQ2
+        2.0,   // MULTIPLIER1
+        1.5,   // MULTIPLIER2
+        0.001, // PHASE1
+        0.05,  // PHASE2
+        0.5,   // SCALE1
+        0.333, // SCALE2
+        0.5,   // INTERPFACTOR
     )*/
-    /*routineInterp(
-        "trial4",          // pngDir
-        "trial4_10232023", // pngName
-        "trial4_10232023", // vidName
-        60,                // FRAMES
-        0.333,               // AMP1
-        0.777,               // AMP2
-        0.01,              // FREQ1
-        0.05,               // FREQ2
-        2.0,               // MULTIPLIER1
-        1.5,            // MULTIPLIER2
-        0.001,             // PHASE1
-        0.05,               // PHASE2
-        0.5,               // SCALE1
-        0.333,               // SCALE2
-        0.5,               // INTERPFACTOR
-    )*/
-    routineOverlay("png_in/IMG_0520.png", "png_in/new.png", 1400)
+    routineOverlay(
+        "png_in/IMG_0520.png", // (.png to crop) fInName
+        "png_in/new.png",      // (cropped .png out) fOutName
+        "overlay0520",         // pngDir
+        "overlay0520",         // pngName
+        "overlay0520",         // vidName
+        "sin(x*x*y*y)", // EXPRESSION1
+	    "cos(x*x + (x*y*y))", // EXPRESSION2
+        1000,  // cropWidth
+	    1000,  // cropHeight
+        30,    // FRAMES
+        1.0,   // AMP1
+        0.1,   // AMP2
+        0.01,  // FREQ1
+        0.02,  // FREQ2
+        1.5,   // MULTIPLIER1
+        1.1,   // MULTIPLIER2
+        0.01,  // PHASE1
+        0.02,  // PHASE2
+        0.01,  // SCALE1
+        0.01,  // SCALE2
+    )
 }
