@@ -1,5 +1,7 @@
 Generating animations from .png images using golang and ffmpeg
 
+TODO: Understand whats going on better so I can make better animations; currently making params more automatable
+
 Run (from src): go build -o main && ./main
 
 Example functions (so I can remove comments from getPixelColorOne and getPixelColorTwo):
@@ -30,6 +32,8 @@ Example functions (so I can remove comments from getPixelColorOne and getPixelCo
     angle := math.Pi * SCALE * math.Tan(float64(x+(y/((x*y)+1))) - math.Sin(float64(x*y)*0.1))
     angle := math.Pi * SCALE * (math.Sin(float64(x)*0.05) * math.Exp(-float64(y)*0.1))
     angle := (math.Pi * SCALE * math.Sin(float64(x*x*y/5)))
+    angle := math.Pi * SCALE * sin(sqrt(pow(x,2) + pow(y,2)))
+    angle := math.Pi * SCALE *sin(0.1 * x) + cos(0.1 * y)
     /* Used for "redetach remixes" */
     /* 1 */
     centerX := float64(WIDTH) / 2
