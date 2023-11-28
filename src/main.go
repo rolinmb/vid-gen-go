@@ -636,23 +636,23 @@ func main() {
     routineOverlay(
         "png_in/IMG_0520.png",  // fInName
         "png_in/new.png",       // fOutName
-        "overlay0520_3",          // pngDir
-        "overlay0520_3",          // pngName
-        "overlay0520_3",          // vidName
-        "abs(y-x) + abs(x-y)",     // EXPRSSION1
-	    "x*x + y*y", // EXPRESSION2
+        "overlay0520_4",          // pngDir
+        "overlay0520_4",          // pngName
+        "overlay0520_4",          // vidName
+        "sin(sqrt(pow(x,2) + pow(y,2)))",     // EXPRSSION1
+	    "sin(0.1 * x) + cos(0.1 * y)", // EXPRESSION2
         1512,  // cropWidth
 	    1512,  // cropHeight
-        60,    // FRAMES
-        2.0,   // AMP1
-        2.0,   // AMP2
-        0.01,  // FREQ1
-        0.01,  // FREQ2
-        1.777,   // MULTIPLIER1
-        10.0,   // MULTIPLIER2
-        0.001,  // PHASE1
-        0.001,  // PHASE2
-        10.0,  // SCALE1
-        10.0,  // SCALE2
+        240,    // FRAMES
+        10.77,   // AMP1
+        10.77,   // AMP2
+        0.0,  // FREQ1
+        0.0,  // FREQ2
+        5.0,   // MULTIPLIER1
+        2.5,   // MULTIPLIER2
+        0.0,  // PHASE1
+        1.0,  // PHASE2
+        2.5,  // SCALE1
+        5.0,  // SCALE2
     )
 }
