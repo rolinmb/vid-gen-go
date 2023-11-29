@@ -553,10 +553,10 @@ func routineOverlay(
     SCL2 = SCALE2
     for i := 1; i < FRAMES + 1; i++ {
         pngResult := image.NewRGBA(image.Rect(0, 0, cropWidth, cropHeight))
-        COMPL1 = MULTIPLIER1*float64(3*i)
-        COMPL2 = MULTIPLIER2*float64(2*i)
-        CLRFACTOR1 = float64(6*i-1) + (5*math.Sin(float64(i)*AMP1*FREQ1))
-        CLRFACTOR2 = float64(8*i-1) + (4*math.Cos(float64(i)*AMP2*FREQ2))
+        COMPL1 = MULTIPLIER1*float64(i)
+        COMPL2 = MULTIPLIER2*float64(i)
+        CLRFACTOR1 = float64(6*i-1) + (2*math.Sin(float64(i)))
+        CLRFACTOR2 = float64(8*i-1) + (1*math.Cos(float64(i)))
         if !IF1CONST {
             IF1 += (0.5*IF1AMP*math.Sin(IF1FREQ*float64(i)))
         }
@@ -634,37 +634,37 @@ func main() {
     )*/
     fmt.Println("[main.go : routineOverlay() started]")
     routineOverlay(
-        "png_in/IMG_0520.png",  // fInName
-        "png_in/new.png",       // fOutName
-        "overlay0520_7",          // pngDir
-        "overlay0520_7",          // pngName
-        "overlay0520_7",          // vidName
-        "sin(sqrt(pow(x,2) + pow(y,2)))",     // EXPRSSION1
-	    "sin(0.1 * x) + cos(0.1 * y)", // EXPRESSION2
-        1500,  // cropWidth
-	    1500,  // cropHeight
+        "png_in/IMG_1790.png",  // fInName
+        "png_in/temp.png",       // fOutName
+        "overlay1790_2",          // pngDir
+        "overlay1790_2",          // pngName
+        "overlay1790_2",          // vidName
+        "sin(x*x + y*y)",     // EXPRSSION1
+	    "sin(x*y*y) * cos(x*x*y)", // EXPRESSION2
+        3000,  // cropWidth
+	    3000,  // cropHeight
         120,    // FRAMES
         1.0,   // AMP1
-        1.5,   // AMP1FACTOR
+        1.1,   // AMP1FACTOR
         1.0,   // AMP2
-        1.5,   // AMP2FACTOR
+        1.1,   // AMP2FACTOR
         0.01,  // FREQ1
         0.01,  // FREQ2
-        1.777,  // MULTIPLIER1
-        1.5,  // MULTIPLIER2
+        1.33,  // MULTIPLIER1
+        1.77,  // MULTIPLIER2
         0.01,  // PHASE1
         0.01,  // PHASE2
-        1.0,  // SCALE1
-        1.0,  // SCALE1FACTOR
-        1.0,  // SCALE2
-        1.0,  // SCALE2FACTOR
-        0.5,  // INTERPFACTOR1 ( < 0.5 => less of EXPRESSION2 .png included over EXPRESSION1)
-        0.0,  // IF1AMP
-        0.0,  // IF1FREQ
-        0.25,  // INTERPFACTOR2 (< 0.5 => less of fInName .png included over EXPRESSION1xEXPRESSION2)
-        0.00005,  // IF2CAMP
-        0.0000420,  // IF2FREQ
-        true,     // IF1CONST
-        false,    // IF2CONST
+        0.5,   // SCALE1
+        1.1,   // SCALE1FACTOR
+        0.5,   // SCALE2
+        1.1,   // SCALE2FACTOR
+        0.5,   // INTERPFACTOR1 ( < 0.5 => less of EXPRESSION2 .png included over EXPRESSION1)
+        0.0,   // IF1AMP
+        0.0,   // IF1FREQ
+        0.5,   // INTERPFACTOR2 (< 0.5 => less of fInName .png included over EXPRESSION1xEXPRESSION2)
+        0.0,   // IF2AMP
+        0.0,   // IF2FREQ
+        true,  // IF1CONST
+        true,  // IF2CONST
     )
 }
