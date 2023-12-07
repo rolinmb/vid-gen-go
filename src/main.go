@@ -527,9 +527,10 @@ func routineOverlay(
         log.Fatalf("cropWidth (= %d) or cropHeight (= %d) is larger than input .png dimensions (%dx%d)", cropWidth, cropHeight, srcWidth, srcHeight)
 	    return
     }
-    startX := (srcWidth - cropWidth) / 2
+    /*startX := (srcWidth - cropWidth) / 2 // crop from center v1
     startY := (srcHeight - cropHeight) / 2
-    cropRect := image.Rect(startX, startY, startX+cropWidth, startY+cropHeight)
+    cropRect := image.Rect(startX, startY, (startX+cropWidth) / 2, (startY+cropHeight) / 2)*/
+    cropRect := image.Rect(0, 0, cropWidth, cropHeight)
     croppedPng := srcPng.(interface {
         SubImage(r image.Rectangle) image.Image
     }).SubImage(cropRect)
@@ -573,9 +574,9 @@ func routineOverlay(
                 gI := uint8(float64(g1)*(float64(1) - IF1) + float64(g2)*IF1)
                 bI := uint8(float64(b1)*(float64(1) - IF1) + float64(b2)*IF1)   
                 rC,gC,bC, _ := croppedPng.At(x, y).RGBA()
-                r := uint8(float64(rI)*(float64(1) - IF2) + float64(rC)*IF2)
-                g := uint8(float64(gI)*(float64(1) - IF2) + float64(gC)*IF2)
-                b := uint8(float64(bI)*(float64(1) - IF2) + float64(bC)*IF2)
+                r := uint8(float64(rC)*(float64(1) - IF2) + float64(rI)*IF2)
+                g := uint8(float64(gC)*(float64(1) - IF2) + float64(gI)*IF2)
+                b := uint8(float64(bC)*(float64(1) - IF2) + float64(bI)*IF2)
                 pngResult.Set(x, y, color.RGBA{r, g, b, 255})
             }
         }
@@ -634,17 +635,17 @@ func main() {
     )*/
     fmt.Println("[main.go : routineOverlay() started]")
     routineOverlay(
-        "png_in/IMG_1790.png",  // fInName
+        "png_in/IMG_0777.png",  // fInName
         "png_in/temp.png",       // fOutName
-        "overlay1790_2",          // pngDir
-        "overlay1790_2",          // pngName
-        "overlay1790_2",          // vidName
-        "sin(x*x + y*y)",     // EXPRSSION1
-	    "sin(x*y*y) * cos(x*x*y)", // EXPRESSION2
-        3000,  // cropWidth
-	    3000,  // cropHeight
-        120,    // FRAMES
-        1.0,   // AMP1
+        "overlay777_1",          // pngDir
+        "overlay777_1",          // pngName
+        "overlay777_1",          // vidName
+        "x*x + y*y",     // EXPRSSION1
+	    "(sin(x*y*y) + (-1*cos(x*x*y)))*(x+y)*(x+y)", // EXPRESSION2
+        1000,  // cropWidth
+	    1000,  // cropHeight
+        90,    // FRAMES
+        1.5,   // AMP1
         1.1,   // AMP1FACTOR
         1.0,   // AMP2
         1.1,   // AMP2FACTOR
@@ -661,7 +662,7 @@ func main() {
         0.5,   // INTERPFACTOR1 ( < 0.5 => less of EXPRESSION2 .png included over EXPRESSION1)
         0.0,   // IF1AMP
         0.0,   // IF1FREQ
-        0.5,   // INTERPFACTOR2 (< 0.5 => less of fInName .png included over EXPRESSION1xEXPRESSION2)
+        0.6,   // INTERPFACTOR2 (< 0.5 => less of EXPRESSION1xEXPRESSION2 included over fInName.png (cropped))
         0.0,   // IF2AMP
         0.0,   // IF2FREQ
         true,  // IF1CONST
