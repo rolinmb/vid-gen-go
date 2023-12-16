@@ -254,7 +254,7 @@ func simpleCleanup(pngdir,pngname string, FRAMES int) {
 func routineSimple(
     pngDir,pngName,vidName,EXPRESSION string,
     WIDTH,HEIGHT,FRAMES int,
-    AMP,FREQ,MULTIPLIER,PHASE,SCALE float64) {
+    AMP,FREQ,PHASE,MULTIPLIER,SCALE float64) {
     expr, err := parser.ParseExpr(EXPRESSION)
     if err != nil {
         log.Fatal(err)
@@ -404,7 +404,7 @@ func interpCleanup(pngDir,pngName string, FRAMES int) {
 func routineInterp(
     pngDir,pngName,vidName,EXPRESSION1,EXPRESSION2 string,
     WIDTH,HEIGHT,FRAMES int,
-    AMP1,AMP2,FREQ1,FREQ2,MULTIPLIER1,MULTIPLIER2,PHASE1,PHASE2,SCALE1,SCALE2,INTERPFACTOR float64) {
+    AMP1,AMP2,FREQ1,FREQ2,PHASE1,PHASE2,MULTIPLIER1,MULTIPLIER2,SCALE1,SCALE2,INTERPFACTOR float64) {
     var expr1,expr2 interface{}
     var err1,err2 error
     var wg sync.WaitGroup
@@ -474,7 +474,7 @@ func overlayCleanup(pngDir,pngName string, FRAMES int) {
 func routineOverlay(
     fInName,fOutName,pngDir,pngName,vidName,EXPRESSION1,EXPRESSION2 string,
     cropWidth,cropHeight,FRAMES int,
-    AMP1,AMP1FACTOR,AMP2,AMP2FACTOR,FREQ1,FREQ2,MULTIPLIER1,MULTIPLIER2,PHASE1,PHASE2,SCALE1,SCALE1FACTOR,SCALE2,SCALE2FACTOR,INTERPFACTOR1,IF1AMP,IF1FREQ,INTERPFACTOR2,IF2AMP,IF2FREQ float64,
+    AMP1,AMP1FACTOR,AMP2,AMP2FACTOR,FREQ1,FREQ2,PHASE1,PHASE2,MULTIPLIER1,MULTIPLIER2,SCALE1,SCALE1FACTOR,SCALE2,SCALE2FACTOR,INTERPFACTOR1,IF1AMP,IF1FREQ,INTERPFACTOR2,IF2AMP,IF2FREQ float64,
     IF1CONST,IF2CONST bool) {
     if cropWidth < 1 || cropHeight < 1 {
         log.Fatalf("cropWidth (= %d) or cropHeight (= %d) cannot be negative or zero", cropWidth, cropHeight)
@@ -556,8 +556,8 @@ func routineOverlay(
         pngResult := image.NewRGBA(image.Rect(0, 0, cropWidth, cropHeight))
         COMPL1 = MULTIPLIER1*float64(i)
         COMPL2 = MULTIPLIER2*float64(i)
-        CLRFACTOR1 = float64(6*i-1) + (2*math.Sin(float64(i)))
-        CLRFACTOR2 = float64(8*i-1) + (1*math.Cos(float64(i)))
+        CLRFACTOR1 = float64(3*i-1)// + (2*math.Sin(float64(i)))
+        CLRFACTOR2 = float64(2*i-1)// + (1*math.Cos(float64(i)))
         if !IF1CONST {
             IF1 += (0.5*IF1AMP*math.Sin(IF1FREQ*float64(i)))
         }
@@ -607,8 +607,8 @@ func main() {
         60,    // FRAMES
         0.222, // AMP
         0.001, // FREQ
-        0.777, // MULTIPLIER
         0.0,   // PHASE
+        0.777, // MULTIPLIER
         0.5,   // SCALE
     )
     fmt.Println("[main.go : routineInterp() started]")
@@ -625,44 +625,44 @@ func main() {
         0.777, // AMP2
         0.01,  // FREQ1
         0.05,  // FREQ2
-        2.0,   // MULTIPLIER1
-        1.5,   // MULTIPLIER2
         0.001, // PHASE1
         0.05,  // PHASE2
+        2.0,   // MULTIPLIER1
+        1.5,   // MULTIPLIER2
         0.5,   // SCALE1
         0.333, // SCALE2
         0.5,   // INTERPFACTOR // ( < 0.5 => less of EXPRESSION2 .png included versus EXPRESSION1)
     )*/
     fmt.Println("[main.go : routineOverlay() started]")
     routineOverlay(
-        "png_in/IMG_0777.png",  // fInName
+        "png_in/paige.png",  // fInName
         "png_in/temp.png",       // fOutName
-        "overlay777_1",          // pngDir
-        "overlay777_1",          // pngName
-        "overlay777_1",          // vidName
-        "x*x + y*y",     // EXPRSSION1
-	    "(sin(x*y*y) + (-1*cos(x*x*y)))*(x+y)*(x+y)", // EXPRESSION2
-        1000,  // cropWidth
-	    1000,  // cropHeight
-        90,    // FRAMES
-        1.5,   // AMP1
-        1.1,   // AMP1FACTOR
-        1.0,   // AMP2
-        1.1,   // AMP2FACTOR
-        0.01,  // FREQ1
-        0.01,  // FREQ2
-        1.33,  // MULTIPLIER1
-        1.77,  // MULTIPLIER2
-        0.01,  // PHASE1
-        0.01,  // PHASE2
-        0.5,   // SCALE1
-        1.1,   // SCALE1FACTOR
-        0.5,   // SCALE2
-        1.1,   // SCALE2FACTOR
+        "overlaypaige_0",          // pngDir
+        "overlaypaige_0",          // pngName
+        "overlaypaige_0",          // vidName
+        "(x + y)*(x - y)",     // EXPRSSION1
+	    "-1*((x*x*y + y*y)*(x*x - y*y*y))", // EXPRESSION2
+        2048,  // cropWidth
+	    2048,  // cropHeight
+        100,    // FRAMES
+        0.0,   // AMP1
+        0.0,   // AMP1FACTOR
+        0.0,   // AMP2
+        0.0,   // AMP2FACTOR
+        0.0,  // FREQ1
+        0.0,  // FREQ2
+        0.0,  // PHASE1
+        0.0,  // PHASE2
+        10.0,  // MULTIPLIER1
+        10.0,  // MULTIPLIER2
+        1000.0,   // SCALE1
+        1.0,   // SCALE1FACTOR
+        1000.0,   // SCALE2
+        1.0,   // SCALE2FACTOR
         0.5,   // INTERPFACTOR1 ( < 0.5 => less of EXPRESSION2 .png included over EXPRESSION1)
         0.0,   // IF1AMP
         0.0,   // IF1FREQ
-        0.6,   // INTERPFACTOR2 (< 0.5 => less of EXPRESSION1xEXPRESSION2 included over fInName.png (cropped))
+        0.825,   // INTERPFACTOR2 (< 0.5 => less of EXPRESSION1xEXPRESSION2 included over fInName.png (cropped))
         0.0,   // IF2AMP
         0.0,   // IF2FREQ
         true,  // IF1CONST
