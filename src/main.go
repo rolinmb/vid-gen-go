@@ -619,7 +619,7 @@ func routineVideoFx(inVidName,framesDir,outVidName string) {
   }
   teardownCmd := exec.Command(
     "ffmpeg", "-i", inVidName,
-    "-r", "1/1", framesDir+"/"+outVidName+"_%03d.png",
+    "-vf", "fps=30", framesDir+"/"+outVidName+"_%03d.png",
   )
   teardownOut, err := teardownCmd.CombinedOutput()
   if err != nil {
@@ -648,10 +648,12 @@ func routineVideoFx(inVidName,framesDir,outVidName string) {
           gt := uint8(math.Abs(float64(x-y)))
           bt := uint8(math.Abs(float64(y-x))) 
           rs, gs, bs, _ := framePng.At(x, y).RGBA()
-          r := uint8((0.5*float64(rs) + 0.5*float64(rt)))
-          g := uint8((0.5*float64(gs) + 0.5*float64(gt)))
-          b := uint8((0.5*float64(bs) + 0.5*float64(bt)))
-          newPng.Set(x, y, color.RGBA{r, g, b, 255})
+          newPng.Set(x, y, color.RGBA{
+            uint8((0.5*float64(rs) + 0.5*float64(rt))), 
+            uint8((0.5*float64(gs) + 0.5*float64(gt))), 
+            uint8((0.5*float64(bs) + 0.5*float64(bt))),
+            255,
+          })
       }
     }
     segments := strings.Split(pngFile.Name(), "_")
@@ -672,7 +674,7 @@ func routineVideoFx(inVidName,framesDir,outVidName string) {
   // Maybe need to get the framerate of vidInName so we can pass it to recombineCmd and thus the resulting outVidName.mp4 is of the same FPS.
   recombineCmd := exec.Command(
     "ffmpeg", "-y",
-    "-framerate", "8",
+    "-framerate", "60",
     "-i", framesDir+"/"+outVidName+"_fx_%03d.png",
     "-c:v", "libx264",  
     "-pix_fmt", "yuv420p",
