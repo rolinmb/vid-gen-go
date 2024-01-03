@@ -8,12 +8,14 @@ import (
     "go/token"
     "go/ast"
     "reflect"
+    "strings"
     "strconv"
     "image"
     "image/color"
     "image/png"
     "os"
     "os/exec"
+    "io/ioutil"
     "sync"
 )
 /*
@@ -35,7 +37,7 @@ func savePngWg(wg *sync.WaitGroup, pngdir,fname string, newPng *image.RGBA) {
     _, err := os.Stat("png_out/"+pngdir)
     if err != nil {
         if os.IsNotExist(err) {
-            mkdir_err := os.Mkdir("png_out/"+pngdir, 0755)
+            mkdir_err := os.Mkdir("png_out/"+pngdir, 0700)
             if mkdir_err != nil {
                 fmt.Println(mkdir_err)
             }
@@ -595,6 +597,94 @@ func routineOverlay(
     overlayCleanup(pngDir, pngName, FRAMES)
 }
 
+func routineVideoFx(inVidName,framesDir,outVidName string) {
+  if _, err := os.Stat(inVidName); err != nil {
+    log.Fatalf("routineVideoFx(): Error locating .mp4 video input 'src/%s': %v", inVidName, err)
+  }
+  _, err := os.Stat(framesDir)
+  if err != nil {
+    if os.IsNotExist(err) {
+      mkdir_err := os.Mkdir(framesDir, 0700)
+      if mkdir_err != nil {
+        fmt.Printf("\nroutineVideoFx(): Error occurred while creating 'src/%s'\n", framesDir, mkdir_err)
+      }
+    } else {
+      log.Fatalf("routineVideoFx(): Error occured while checking if 'src/%s' exists: %v", framesDir, err)
+    }
+    fmt.Printf("\nroutineVideoFx(): Created directory 'src/%s'\n", framesDir)
+  } else {
+    os.RemoveAll(framesDir)
+    os.MkdirAll(framesDir, 0700)
+    fmt.Printf("\nroutineVideoFx(): Cleared contents of directory 'src/%s'\n", framesDir)
+  }
+  teardownCmd := exec.Command(
+    "ffmpeg", "-i", inVidName,
+    "-r", "1/1", framesDir+"/"+outVidName+"_%03d.png",
+  )
+  teardownOut, err := teardownCmd.CombinedOutput()
+  if err != nil {
+    log.Fatalf("routineVideoFx(): Error occured while running teardownCmd: %v", err)
+  }
+  fmt.Printf("\nroutineVideoFx(): teardownCmd Output:\n\n%s\n(Successfully took apart 'src/%s' into individual frames)\n", string(teardownOut), inVidName)
+  // We now have the frames in png_out/framesDir/vidName_%d.png; process the .pngs with effect then recombine with ffmpeg.
+  frameFiles, err := ioutil.ReadDir(framesDir)
+  if err != nil {
+    log.Fatalf("routineVideoFx(): Error occured while trying to read names of frame .pngs in 'src/%s': %v", framesDir, err)
+  }
+  for _, pngFile := range frameFiles {
+    rawPng, err := os.Open(framesDir+"/"+pngFile.Name()) 
+    if err != nil {
+      log.Fatalf("routineVideoFx(): Error loading frame 'src/%s/%s' raw: %v", framesDir, pngFile.Name(), err)
+    }
+    defer rawPng.Close()
+    framePng, _, err := image.Decode(rawPng)
+    if err != nil {
+      log.Fatalf("routineVideoFx(): Error decoding raw frame '%s' with go/image: %v", pngFile.Name(), err)
+    }
+    newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
+    for x := 0; x < framePng.Bounds().Max.X; x++ {
+        for y := 0; y < framePng.Bounds().Max.Y; y++ {
+          rt := uint8(x+y) // add more customaization here like passing in functions
+          gt := uint8(math.Abs(float64(x-y)))
+          bt := uint8(math.Abs(float64(y-x))) 
+          rs, gs, bs, _ := framePng.At(x, y).RGBA()
+          r := uint8((0.5*float64(rs) + 0.5*float64(rt)))
+          g := uint8((0.5*float64(gs) + 0.5*float64(gt)))
+          b := uint8((0.5*float64(bs) + 0.5*float64(bt)))
+          newPng.Set(x, y, color.RGBA{r, g, b, 255})
+      }
+    }
+    segments := strings.Split(pngFile.Name(), "_")
+    idxStr := strings.Replace(segments[len(segments)-1], ".png", "", -1)
+    newFname := fmt.Sprintf("%s/%s_fx_%s.png", framesDir, outVidName, idxStr)
+    newFrame, err := os.Create(newFname)
+    if err != nil {
+      log.Fatal("routineVideoFx(): Error creating '%s': %v", newFname, err)
+    }
+    defer newFrame.Close()
+    err = png.Encode(newFrame, newPng)
+    if err != nil {
+      log.Fatal("routineVideoFx(): Error encoding raw .png data to save to '%s': %v", newFname, err)
+    }
+    fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame '%s'\n", newFname)
+    // progress the gereation parameters here so the interpolation with source .mp4 is also an animation overlay
+  }
+  // Maybe need to get the framerate of vidInName so we can pass it to recombineCmd and thus the resulting outVidName.mp4 is of the same FPS.
+  recombineCmd := exec.Command(
+    "ffmpeg", "-y",
+    "-framerate", "8",
+    "-i", framesDir+"/"+outVidName+"_fx_%03d.png",
+    "-c:v", "libx264",  
+    "-pix_fmt", "yuv420p",
+    "vid_out/"+outVidName+".mp4",
+  )
+  recombineOut, err := recombineCmd.CombinedOutput()
+  if err != nil {
+    log.Fatalf("routineVideoFx(): Error occured while running recombineCmd: %v", err)
+  }
+  fmt.Printf("\nroutineVideoFx(): recombineCmd Output:\n\n%s\n(Successfully created 'src/vid_out/%s.mp4')\n", string(recombineOut), outVidName)
+}
+
 func main() {
     /*fmt.Println("[main.go : routineSimple() started]")
     routineSimple(
@@ -633,7 +723,7 @@ func main() {
         0.333, // SCALE2
         0.5,   // INTERPFACTOR // ( < 0.5 => less of EXPRESSION2 .png included versus EXPRESSION1)
     )*/
-    fmt.Println("[main.go : routineOverlay() started]")
+    /*fmt.Println("[main.go : routineOverlay() started]")
     routineOverlay(
         "png_in/paige.png",  // fInName
         "png_in/temp.png",       // fOutName
@@ -667,5 +757,11 @@ func main() {
         0.0,   // IF2FREQ
         true,  // IF1CONST
         true,  // IF2CONST
+    )
+    */fmt.Println("[main.go : routineVideoFx() started]")
+    routineVideoFx(
+        "vid_in/overlaypaige_0.mp4", // inVidName 
+        "png_out/test0", // framesDir
+        "test0", // outVidName
     )
 }

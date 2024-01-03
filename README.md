@@ -1,8 +1,8 @@
 Generating animations from .png images using golang and ffmpeg
 
-TODO: Understand whats going on better so I can make better animations; currently making params more automatable
+TODO: In routineVideoFx(); need to detect source FPS of inVideoName so when running recombineCmd we rebuild the .mp4 at the original framerate 
 
-Run (from src): go build -o main && ./main
+Run (from root): go build src -o main && ./main
 
 Example functions (so I can remove comments from getPixelColorOne and getPixelColorTwo):
 '''
