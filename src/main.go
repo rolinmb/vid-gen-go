@@ -505,29 +505,24 @@ func routineOverlay(
     wg.Wait()
     if err1 != nil {
         log.Fatal(err1)
-        return
     }
     if err2 != nil {
         log.Fatal(err2)
-        return
     }
     fIn, err := os.Open(fInName) 
     if err != nil {
         log.Fatal(err)
-        return
     }
     defer fIn.Close()
     srcPng, _, err := image.Decode(fIn)
     if err != nil {
         log.Fatal(err)
-        return
     }
     srcBounds := srcPng.Bounds()
     srcWidth := srcBounds.Max.X
     srcHeight := srcBounds.Max.Y
     if cropWidth > srcWidth || cropHeight > srcHeight {
         log.Fatalf("cropWidth (= %d) or cropHeight (= %d) is larger than input .png dimensions (%dx%d)", cropWidth, cropHeight, srcWidth, srcHeight)
-	    return
     }
     /*startX := (srcWidth - cropWidth) / 2 // crop from center v1
     startY := (srcHeight - cropHeight) / 2
@@ -539,13 +534,11 @@ func routineOverlay(
     fOut, err := os.Create(fOutName)
     if err != nil {
         log.Fatal(err)
-	    return
     }
     defer fOut.Close()
     err = png.Encode(fOut, croppedPng)
     if err != nil {
         log.Fatal(err)
-	    return
     }
     fmt.Printf("\n[Image cropped and saved successfully to %s]\n\n", fOutName)
     var fNameInc,fNameDec string
@@ -597,7 +590,7 @@ func routineOverlay(
     overlayCleanup(pngDir, pngName, FRAMES)
 }
 
-func routineVideoFx(movName,inVidName,framesDir,outVidName string) {
+func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressionG,expressionB string) {
   if _, err := os.Stat(movName); err != nil {
     log.Fatalf("routineVideoFx(): Error locating .mov video input 'src/%s': %v", movName, err)
   }
@@ -646,6 +639,32 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName string) {
   if err != nil {
     log.Fatalf("routineVideoFx(): Error occured while trying to read names of frame .pngs in 'src/%s': %v", framesDir, err)
   }
+  var EXPR,EXPG,EXPB interface {}
+  var errR,errG,errB error
+  var wg sync.WaitGroup
+  wg.Add(3)
+  go func() {
+    defer wg.Done()
+    EXPR, errR = parser.ParseExpr(expressionR)
+  }()
+  go func() {
+    defer wg.Done()
+    EXPG, errG = parser.ParseExpr(expressionG)
+  }()
+  go func() {
+    defer wg.Done()
+    EXPB, errB = parser.ParseExpr(expressionB)
+  }()
+  wg.Wait()
+  if errR != nil {
+    log.Fatal(errR)
+  }
+  if errG != nil {
+    log.Fatal(errG)
+  }
+  if errB != nil {
+    log.Fatal(errB)
+  }
   for _, pngFile := range frameFiles {
     rawPng, err := os.Open(framesDir+"/"+pngFile.Name()) 
     if err != nil {
@@ -659,17 +678,30 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName string) {
     newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
     for x := 0; x < framePng.Bounds().Max.X; x++ {
         for y := 0; y < framePng.Bounds().Max.Y; y++ {
-          rt := uint8(x+y) // add more customaization here like passing in functions
-          gt := uint8(math.Abs(float64(x-y)))
-          bt := uint8(math.Abs(float64(y-x))) 
-          rs, gs, bs, _ := framePng.At(x, y).RGBA()
-          newPng.Set(x, y, color.RGBA{
-            uint8((0.5*float64(rs) + 0.5*float64(rt))), 
-            uint8((0.5*float64(gs) + 0.5*float64(gt))), 
-            uint8((0.5*float64(bs) + 0.5*float64(bt))),
-            255,
-          })
-      }
+            vars := map[string]int{"X": x, "Y": y }
+            rval, err := evaluateASTNode(EXPR, vars)
+                if err != nil {
+                    log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
+            }
+            rt := uint8(rval) // add more customaization here like passing in functions
+            gval, err := evaluateASTNode(EXPG, vars)
+            if err != nil {
+                log.Fatalf("routineVideoFx(): Error evaulating parsed rGb expression: %v", err)
+            }
+            gt := uint8(gval)
+            bval, err := evaluateASTNode(EXPB, vars)
+            if err != nil {
+                log.Fatalf("routineVideoFx(): Error evaulating parsed rgB expression: %v", err)
+            }
+            bt := uint8(bval) 
+            rs, gs, bs, _ := framePng.At(x, y).RGBA()
+            newPng.Set(x, y, color.RGBA{
+                uint8((0.5*float64(rs) + 0.5*float64(rt))), 
+                uint8((0.5*float64(gs) + 0.5*float64(gt))), 
+                uint8((0.5*float64(bs) + 0.5*float64(bt))),
+                255,
+            })
+        }
     }
     segments := strings.Split(pngFile.Name(), "_")
     idxStr := strings.Replace(segments[len(segments)-1], ".png", "", -1)
@@ -781,5 +813,8 @@ func main() {
         "vid_in/overlaypaige_0.mp4", // inVidName 
         "png_out/test0", // framesDir
         "test0", // outVidName
+        "(x + y)", // expressionR
+        "abs(x - y)", // expressionG
+        "abs(x + y)", // expressionB
     )
 }
