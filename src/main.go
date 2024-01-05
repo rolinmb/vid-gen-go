@@ -597,9 +597,9 @@ func routineOverlay(
     overlayCleanup(pngDir, pngName, FRAMES)
 }
 
-func routineVideoFx(inVidName,framesDir,outVidName string) {
-  if _, err := os.Stat(inVidName); err != nil {
-    log.Fatalf("routineVideoFx(): Error locating .mp4 video input 'src/%s': %v", inVidName, err)
+func routineVideoFx(movName,inVidName,framesDir,outVidName string) {
+  if _, err := os.Stat(movName); err != nil {
+    log.Fatalf("routineVideoFx(): Error locating .mov video input 'src/%s': %v", movName, err)
   }
   _, err := os.Stat(framesDir)
   if err != nil {
@@ -617,6 +617,21 @@ func routineVideoFx(inVidName,framesDir,outVidName string) {
     os.MkdirAll(framesDir, 0700)
     fmt.Printf("\nroutineVideoFx(): Cleared contents of directory 'src/%s'\n", framesDir)
   }
+  convertCmd := exec.Command(
+    "ffmpeg", "-i", movName,
+    "-c:v", "libx264",
+    "-crf", "15",
+    "-preset", "slower",
+    "-an", inVidName,
+  )
+  convertOut, err := convertCmd.CombinedOutput()
+  if err != nil {
+    log.Fatalf("routineVideoFx(): Error occured while running convertCmd: %v", err)
+  }
+  if _, err := os.Stat(inVidName); err != nil {
+    log.Fatalf("routineVideoFx(): Error locating .mp4 video input 'src/%s': %v", inVidName, err)
+  }
+  fmt.Printf("\nroutineVideoFx(): convertCmd Output: \n\n%s\n(Successfully converted 'src/%s' to 'src/$s')\n", string(convertOut), movName, inVidName)
   teardownCmd := exec.Command(
     "ffmpeg", "-i", inVidName,
     "-vf", "fps=30", framesDir+"/"+outVidName+"_%03d.png",
@@ -762,6 +777,7 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
+	"vid_in/input.mov", // movName
         "vid_in/overlaypaige_0.mp4", // inVidName 
         "png_out/test0", // framesDir
         "test0", // outVidName
