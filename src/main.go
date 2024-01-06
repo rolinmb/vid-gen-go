@@ -673,6 +673,7 @@ func routineVideoFx(/*movName,*/inVidName,framesDir,outVidName,expressionR,expre
   } else {
     ir = interpRatio
   }
+  adjFactor := interpAdj / float64(len(frameFiles))
   for _, pngFile := range frameFiles {
     rawPng, err := os.Open(framesDir+"/"+pngFile.Name()) 
     if err != nil {
@@ -724,17 +725,17 @@ func routineVideoFx(/*movName,*/inVidName,framesDir,outVidName,expressionR,expre
       log.Fatal("routineVideoFx(): Error encoding raw .png data to save to '%s': %v", newFname, err)
     }
     fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame '%s'\n", newFname)
-    ir += interpAdj/float64(len(frameFiles))
+    ir += adjFactor
     if ir < 0.0 {
         ir = 0.0
-    } else if ir > 1.0 {
-        ir = 1.0
+    } else if ir > (interpRatio+interpAdj) || ir > 1.0 {
+        ir = interpRatio+interpAdj
     }
   }
   // Maybe need to get the framerate of vidInName so we can pass it to recombineCmd and thus the resulting outVidName.mp4 is of the same FPS.
   recombineCmd := exec.Command(
     "ffmpeg", "-y",
-    "-framerate", "60",
+    "-framerate", "30",
     "-i", framesDir+"/"+outVidName+"_fx_%03d.png",
     "-c:v", "libx264",  
     "-pix_fmt", "yuv420p",
@@ -823,13 +824,13 @@ func main() {
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
 	    //"vid_in/odometer.mov", // movName
-        "vid_in/squirrel.mp4", // inVidName 
-        "png_out/squirrel2", // framesDir
-        "squirrel2", // outVidName
-        "(x * y)", // expressionR
-        "abs(x*x - y*y)", // expressionG
-        "abs(y*y - x*x)", // expressionB
-        0.89, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.12, // interpAdj (value represents difference in interp ratio by final frame)
+        "vid_in/promobase_01062024.mp4", // inVidName 
+        "png_out/promo01062024_0", // framesDir
+        "promo01062024_0", // outVidName
+        "x*x + y*y", // expressionR
+        "x * y", // expressionG
+        "pow((x*y), 2) + (y*y) + (x*x)", // expressionB
+        0.975, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.015, // interpAdj (value represents difference in interp ratio by final frame)
     )
 }
