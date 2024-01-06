@@ -292,9 +292,9 @@ func generatePngInterp(
             r2,g2,b2 := getPixelColor(dx2, dy2, WIDTH, HEIGHT, SCALE2, COMPL2, CLRFACTOR2, expr2)
             newPngA.Set(x, y, color.RGBA{r1, g1, b1, 255})
             newPngB.Set(x, y, color.RGBA{r2, g2, b2, 255})
-            r := uint8(float64(r1)*(float64(1)-INTERPFACTOR) + float64(r2)*INTERPFACTOR)
-            g := uint8(float64(g1)*(float64(1)-INTERPFACTOR) + float64(g2)*INTERPFACTOR)
-            b := uint8(float64(b1)*(float64(1)-INTERPFACTOR) + float64(b2)*INTERPFACTOR)
+            r := uint8(float64(r1)*(INTERPFACTOR) + float64(r2)*(1.0-INTERPFACTOR))
+            g := uint8(float64(g1)*(INTERPFACTOR) + float64(g2)*(1.0-INTERPFACTOR))
+            b := uint8(float64(b1)*(INTERPFACTOR) + float64(b2)*(1.0-INTERPFACTOR))
             finalPng.Set(x, y, color.RGBA{r, g, b, 255})
         }
     }
@@ -565,13 +565,13 @@ func routineOverlay(
                 dx2,dy2 := distort(x, y, cropWidth, cropHeight, AMP2, FREQ2, PHASE2)
                 r1,g1,b1 := getPixelColor(dx1, dy1, cropWidth, cropHeight, SCL1, COMPL1, CLRFACTOR1, expr1)
                 r2,g2,b2 := getPixelColor(dx2, dy2, cropWidth, cropHeight, SCL2, COMPL2, CLRFACTOR2, expr2)
-                rI := uint8(float64(r1)*(float64(1) - IF1) + float64(r2)*IF1)
-                gI := uint8(float64(g1)*(float64(1) - IF1) + float64(g2)*IF1)
-                bI := uint8(float64(b1)*(float64(1) - IF1) + float64(b2)*IF1)   
+                rI := uint8(float64(r1)*IF1 + float64(r2)*(1.0-IF1))
+                gI := uint8(float64(g1)*IF1 + float64(g2)*(1.0-IF1))
+                bI := uint8(float64(b1)*IF1 + float64(b2)*(1.0-IF1))   
                 rC,gC,bC, _ := croppedPng.At(x, y).RGBA()
-                r := uint8(float64(rC)*(float64(1) - IF2) + float64(rI)*IF2)
-                g := uint8(float64(gC)*(float64(1) - IF2) + float64(gI)*IF2)
-                b := uint8(float64(bC)*(float64(1) - IF2) + float64(bI)*IF2)
+                r := uint8(float64(rC)*(1.0-IF2) + float64(rI)*IF2)
+                g := uint8(float64(gC)*(1.0-IF2) + float64(gI)*IF2)
+                b := uint8(float64(bC)*(1.0-IF2) + float64(bI)*IF2)
                 pngResult.Set(x, y, color.RGBA{r, g, b, 255})
             }
         }
@@ -590,11 +590,11 @@ func routineOverlay(
     overlayCleanup(pngDir, pngName, FRAMES)
 }
 
-func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressionG,expressionB string) {
-  if _, err := os.Stat(movName); err != nil {
+func routineVideoFx(/*movName,*/inVidName,framesDir,outVidName,expressionR,expressionG,expressionB string, interpRatio,interpAdj float64) {
+  /*if _, err := os.Stat(movName); err != nil {
     log.Fatalf("routineVideoFx(): Error locating .mov video input 'src/%s': %v", movName, err)
   }
-  _, err := os.Stat(framesDir)
+  */_, err := os.Stat(framesDir)
   if err != nil {
     if os.IsNotExist(err) {
       mkdir_err := os.Mkdir(framesDir, 0700)
@@ -610,7 +610,7 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressio
     os.MkdirAll(framesDir, 0700)
     fmt.Printf("\nroutineVideoFx(): Cleared contents of directory 'src/%s'\n", framesDir)
   }
-  convertCmd := exec.Command(
+  /*convertCmd := exec.Command(
     "ffmpeg", "-i", movName,
     "-c:v", "libx264",
     "-crf", "15",
@@ -620,11 +620,11 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressio
   convertOut, err := convertCmd.CombinedOutput()
   if err != nil {
     log.Fatalf("routineVideoFx(): Error occured while running convertCmd: %v", err)
-  }
+  }*/
   if _, err := os.Stat(inVidName); err != nil {
     log.Fatalf("routineVideoFx(): Error locating .mp4 video input 'src/%s': %v", inVidName, err)
   }
-  fmt.Printf("\nroutineVideoFx(): convertCmd Output: \n\n%s\n(Successfully converted 'src/%s' to 'src/$s')\n", string(convertOut), movName, inVidName)
+  //fmt.Printf("\nroutineVideoFx(): convertCmd Output: \n\n%s\n(Successfully converted 'src/%s' to 'src/$s')\n", string(convertOut), movName, inVidName)
   teardownCmd := exec.Command(
     "ffmpeg", "-i", inVidName,
     "-vf", "fps=30", framesDir+"/"+outVidName+"_%03d.png",
@@ -665,6 +665,14 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressio
   if errB != nil {
     log.Fatal(errB)
   }
+  var ir float64
+  if interpRatio < 0.0 {
+    ir = 0.0
+  } else if interpRatio > 1.0 {
+    ir = 1.0
+  } else {
+    ir = interpRatio
+  }
   for _, pngFile := range frameFiles {
     rawPng, err := os.Open(framesDir+"/"+pngFile.Name()) 
     if err != nil {
@@ -678,12 +686,12 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressio
     newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
     for x := 0; x < framePng.Bounds().Max.X; x++ {
         for y := 0; y < framePng.Bounds().Max.Y; y++ {
-            vars := map[string]int{"X": x, "Y": y }
+            vars := map[string]int{ "x": x, "y": y }
             rval, err := evaluateASTNode(EXPR, vars)
-                if err != nil {
-                    log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
+            if err != nil {
+                log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
             }
-            rt := uint8(rval) // add more customaization here like passing in functions
+            rt := uint8(rval)
             gval, err := evaluateASTNode(EXPG, vars)
             if err != nil {
                 log.Fatalf("routineVideoFx(): Error evaulating parsed rGb expression: %v", err)
@@ -696,9 +704,9 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressio
             bt := uint8(bval) 
             rs, gs, bs, _ := framePng.At(x, y).RGBA()
             newPng.Set(x, y, color.RGBA{
-                uint8((0.5*float64(rs) + 0.5*float64(rt))), 
-                uint8((0.5*float64(gs) + 0.5*float64(gt))), 
-                uint8((0.5*float64(bs) + 0.5*float64(bt))),
+                uint8((ir*float64(rs) + (1.0-ir)*float64(rt))), 
+                uint8((ir*float64(gs) + (1.0-ir)*float64(gt))), 
+                uint8((ir*float64(bs) + (1.0-ir)*float64(bt))),
                 255,
             })
         }
@@ -716,7 +724,12 @@ func routineVideoFx(movName,inVidName,framesDir,outVidName,expressionR,expressio
       log.Fatal("routineVideoFx(): Error encoding raw .png data to save to '%s': %v", newFname, err)
     }
     fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame '%s'\n", newFname)
-    // progress the gereation parameters here so the interpolation with source .mp4 is also an animation overlay
+    ir += interpAdj/float64(len(frameFiles))
+    if ir < 0.0 {
+        ir = 0.0
+    } else if ir > 1.0 {
+        ir = 1.0
+    }
   }
   // Maybe need to get the framerate of vidInName so we can pass it to recombineCmd and thus the resulting outVidName.mp4 is of the same FPS.
   recombineCmd := exec.Command(
@@ -770,7 +783,7 @@ func main() {
         1.5,   // MULTIPLIER2
         0.5,   // SCALE1
         0.333, // SCALE2
-        0.5,   // INTERPFACTOR // ( < 0.5 => less of EXPRESSION2 .png included versus EXPRESSION1)
+        0.5,   // INTERPFACTOR // (factor < 0.5 => less of EXPRESSION1; factor > 0.5 => more of EXPRESSION1)
     )*/
     /*fmt.Println("[main.go : routineOverlay() started]")
     routineOverlay(
@@ -798,10 +811,10 @@ func main() {
         1.0,   // SCALE1FACTOR
         1000.0,   // SCALE2
         1.0,   // SCALE2FACTOR
-        0.5,   // INTERPFACTOR1 ( < 0.5 => less of EXPRESSION2 .png included over EXPRESSION1)
+        0.5,   // INTERPFACTOR1 (factor < 0.5 => less of EXPRESSION1; factor > 0.5 => more of EXPRESSION1)
         0.0,   // IF1AMP
         0.0,   // IF1FREQ
-        0.825,   // INTERPFACTOR2 (< 0.5 => less of EXPRESSION1xEXPRESSION2 included over fInName.png (cropped))
+        0.825, // INTERPFACTOR2 (factor < 0.5 => more of fInName; factor > 0.5 => less of fInName)
         0.0,   // IF2AMP
         0.0,   // IF2FREQ
         true,  // IF1CONST
@@ -809,12 +822,14 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-	"vid_in/input.mov", // movName
-        "vid_in/overlaypaige_0.mp4", // inVidName 
-        "png_out/test0", // framesDir
-        "test0", // outVidName
-        "(x + y)", // expressionR
-        "abs(x - y)", // expressionG
-        "abs(x + y)", // expressionB
+	    //"vid_in/odometer.mov", // movName
+        "vid_in/squirrel.mp4", // inVidName 
+        "png_out/squirrel2", // framesDir
+        "squirrel2", // outVidName
+        "(x * y)", // expressionR
+        "abs(x*x - y*y)", // expressionG
+        "abs(y*y - x*x)", // expressionB
+        0.89, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.12, // interpAdj (value represents difference in interp ratio by final frame)
     )
 }
