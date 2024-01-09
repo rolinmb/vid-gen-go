@@ -534,7 +534,7 @@ func routineOverlay(
     fInName,fOutName,pngDir,pngName,vidName,EXPRESSION1,EXPRESSION2 string,
     cropWidth,cropHeight,FRAMES int,
     AMP1,AMP1FACTOR,AMP2,AMP2FACTOR,FREQ1,FREQ2,PHASE1,PHASE2,MULTIPLIER1,MULTIPLIER2,SCALE1,SCALE1FACTOR,SCALE2,SCALE2FACTOR,INTERPFACTOR1,IF1AMP,IF1FREQ,INTERPFACTOR2,IF2AMP,IF2FREQ float64,
-    IF1CONST,IF2CONST bool) {
+    IF1CONST,IF2CONST,edgeDetect bool) {
     if cropWidth < 1 || cropHeight < 1 {
         log.Fatalf("cropWidth (= %d) or cropHeight (= %d) cannot be negative or zero", cropWidth, cropHeight)
         return
@@ -588,6 +588,11 @@ func routineOverlay(
     croppedPng := srcPng.(interface {
         SubImage(r image.Rectangle) image.Image
     }).SubImage(cropRect)
+    if edgeDetect {
+        croppedRGBA := image.NewRGBA(croppedPng.Bounds())
+        draw.Draw(croppedRGBA, croppedPng.Bounds(), croppedPng, croppedPng.Bounds().Min, draw.Over)
+        croppedPng = getEdges(croppedRGBA)
+    }
     fOut, err := os.Create(fOutName)
     if err != nil {
         log.Fatal(err)
@@ -647,7 +652,10 @@ func routineOverlay(
     overlayCleanup(pngDir, pngName, FRAMES)
 }
 
-func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expressionB string, interpRatio,interpAdj float64, edgeDetect bool) {
+func routineVideoFx(
+    inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
+    scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
+    edgeDetect bool) {
   _, err := os.Stat(framesDir)
   if err != nil {
     if os.IsNotExist(err) {
@@ -680,10 +688,10 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
   if err != nil {
     log.Fatalf("routineVideoFx(): Error occured while trying to read names of frame .pngs in 'src/%s': %v", framesDir, err)
   }
-  var EXPR,EXPG,EXPB interface {}
-  var errR,errG,errB error
+  var EXPR,EXPG,EXPB,MFNR,MFNG,MFNB interface {}
+  var errR,errG,errB,errmR,errmG,errmB error
   var wg sync.WaitGroup
-  wg.Add(3)
+  wg.Add(6)
   go func() {
     defer wg.Done()
     EXPR, errR = parser.ParseExpr(expressionR)
@@ -696,6 +704,18 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
     defer wg.Done()
     EXPB, errB = parser.ParseExpr(expressionB)
   }()
+  go func() {
+    defer wg.Done()
+    MFNR, errmR = parser.ParseExpr(multFnR)
+  }()
+  go func() {
+    defer wg.Done()
+    MFNG, errmG = parser.ParseExpr(multFnG)
+  }()
+  go func() {
+    defer wg.Done()
+    MFNB, errmB = parser.ParseExpr(multFnB)
+  }()
   wg.Wait()
   if errR != nil {
     log.Fatal(errR)
@@ -704,6 +724,15 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
     log.Fatal(errG)
   }
   if errB != nil {
+    log.Fatal(errB)
+  }
+  if errmR != nil {
+    log.Fatal(errR)
+  }
+  if errmG != nil {
+    log.Fatal(errG)
+  }
+  if errmB != nil {
     log.Fatal(errB)
   }
   var ir float64
@@ -733,26 +762,38 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
     for x := 0; x < framePng.Bounds().Max.X; x++ {
         for y := 0; y < framePng.Bounds().Max.Y; y++ {
             vars := map[string]int{ "x": x, "y": y }
-            rval, err := evaluateASTNode(EXPR, vars)
+            rt, err := evaluateASTNode(EXPR, vars)
             if err != nil {
                 log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
             }
-            rt := uint8(rval)
-            gval, err := evaluateASTNode(EXPG, vars)
+            rval := uint8(rt)
+            gt, err := evaluateASTNode(EXPG, vars) 
             if err != nil {
                 log.Fatalf("routineVideoFx(): Error evaulating parsed rGb expression: %v", err)
             }
-            gt := uint8(gval)
-            bval, err := evaluateASTNode(EXPB, vars)
+            gval := uint8(gt)
+            bt, err := evaluateASTNode(EXPB, vars)
             if err != nil {
                 log.Fatalf("routineVideoFx(): Error evaulating parsed rgB expression: %v", err)
             }
-            bt := uint8(bval) 
+            bval := uint8(bt)
+            multr, err := evaluateASTNode(MFNR, vars)
+            if err != nil {
+                log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb multiplier expression: %v", err)
+            }
+            multg, err := evaluateASTNode(MFNG, vars)
+            if err != nil {
+                log.Fatalf("routineVideoFx(): Error evaulating parsed rGb multiplier expression: %v", err)
+            }
+            multb, err := evaluateASTNode(MFNB, vars)
+            if err != nil {
+                log.Fatalf("routineVideoFx(): Error evaulating parsed rgB multiplier expression: %v", err)
+            }
             rs, gs, bs, _ := framePng.At(x, y).RGBA()
             newPng.Set(x, y, color.RGBA{
-                uint8((ir*float64(rs) + (1.0-ir)*float64(rt))), 
-                uint8((ir*float64(gs) + (1.0-ir)*float64(gt))), 
-                uint8((ir*float64(bs) + (1.0-ir)*float64(bt))),
+                uint8((ir*float64(rs) + (1.0-ir)*(scaleR*multr*float64(rval)))), 
+                uint8((ir*float64(gs) + (1.0-ir)*(scaleG*multg*float64(gval)))), 
+                uint8((ir*float64(bs) + (1.0-ir)*(scaleB*multb*float64(bval)))),
                 255,
             })
         }
@@ -781,6 +822,9 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
     } else if ir > (interpRatio+interpAdj) || ir > 1.0 {
         ir = interpRatio+interpAdj
     }
+    scaleR *= scaleAdjR
+    scaleG *= scaleAdjG
+    scaleB *= scaleAdjB
   }
   // Maybe need to get the framerate of vidInName so we can pass it to recombineCmd and thus the resulting outVidName.mp4 is of the same FPS.
   recombineCmd := exec.Command(
@@ -838,15 +882,15 @@ func main() {
     )*/
     /*fmt.Println("[main.go : routineOverlay() started]")
     routineOverlay(
-        "png_in/paige.png",  // fInName
+        "png_in/IMG_0432.png",  // fInName
         "png_in/temp.png",       // fOutName
-        "overlaypaige_0",          // pngDir
-        "overlaypaige_0",          // pngName
-        "overlaypaige_0",          // vidName
+        "IMG_0432_1",          // pngDir
+        "IMG_0432_1",          // pngName
+        "IMG_0432_1",          // vidName
         "(x + y)*(x - y)",     // EXPRSSION1
 	    "-1*((x*x*y + y*y)*(x*x - y*y*y))", // EXPRESSION2
-        2048,  // cropWidth
-	    2048,  // cropHeight
+        1512,  // cropWidth
+	    1512,  // cropHeight
         100,    // FRAMES
         0.0,   // AMP1
         0.0,   // AMP1FACTOR
@@ -865,22 +909,32 @@ func main() {
         0.5,   // INTERPFACTOR1 (factor < 0.5 => less of EXPRESSION1; factor > 0.5 => more of EXPRESSION1)
         0.0,   // IF1AMP
         0.0,   // IF1FREQ
-        0.825, // INTERPFACTOR2 (factor < 0.5 => more of fInName; factor > 0.5 => less of fInName)
+        0.1, // INTERPFACTOR2 (factor < 0.5 => more of fInName; factor > 0.5 => less of fInName)
         0.0,   // IF2AMP
         0.0,   // IF2FREQ
         true,  // IF1CONST
         true,  // IF2CONST
+        false, // edgeDetect
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
         "vid_in/odometer.mp4", // inVidName 
-        "png_out/odometer3", // framesDir
-        "odometer3", // outVidName
-        "x*x + y*y", // expressionR
-        "abs((x+y)*(x-y))*256", // expressionG
-        "abs(sin(x*x*y*y))*256", // expressionB
-        0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.005, // interpAdj (value represents difference in interp ratio by final frame)
+        "png_out/odometer6", // framesDir
+        "odometer6", // outVidName
+        "x*x+y*y", // expressionR
+        "1", // multFnR 
+        "abs((2*x+y)*(x-y))*255", // expressionG
+        "1", // multFnG
+        "abs(sin(x*x*y*y))*255", // expressionB
+        "1", // multFnB
+        1.0, // scaleR
+        1.0, // scaleAdjR
+        1.0, // scaleG
+        1.0, // scaleAdjG
+        1.0, // scaleB
+        1.0, // scaleAdjB
+        0.9, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.0, // interpAdj (value represents difference in interp ratio by final frame)
         true, // edgeDetect
     )
 }
