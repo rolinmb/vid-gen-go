@@ -771,7 +771,7 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
     newFrame.Close()
     fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame 'src/%s/%s'\n", framesDir, newFname)
     rawFrame.Close()
-    err := os.Remove(framesDir+"/"+pngFile.Name())
+    err = os.Remove(framesDir+"/"+pngFile.Name())
     if err != nil {
         log.Fatalf("routineVideoFx(): Failed to remove source frame 'src/%s/%s': %v", framesDir, pngFile.Name(), err)
     }
