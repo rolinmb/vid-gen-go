@@ -12,12 +12,69 @@ import (
     "strconv"
     "image"
     "image/color"
+    "image/draw"
     "image/png"
     "os"
     "os/exec"
     "io/ioutil"
     "sync"
 )
+
+var sobelHoriz = [3][3]int{
+    {-1, 0, 1},
+    {-2, 0, 2},
+    {-1, 0, 1},
+}
+
+var sobelVerti = [3][3]int{
+    {-1, -2, -1},
+    {0, 0, 0},
+    {1, 2, 1},
+}
+
+func intSqrt(n int) int {
+    var x,y int
+    for x = n; x > 0; x = y {
+        y = (x + n/x) / 2
+        if y >= x {
+            return x
+        }
+    }
+    return 0
+}
+
+func getEdges(inputPng *image.RGBA) *image.RGBA {
+    bounds := inputPng.Bounds()
+    grayPng := image.NewGray(bounds)
+    draw.Draw(grayPng, grayPng.Bounds(), inputPng, image.Point{}, draw.Over)
+    width,height := bounds.Dx(), bounds.Dy()
+    gradX := image.NewGray(bounds)
+    gradY := image.NewGray(bounds)
+    for y := 1; y < height-1; y++ {
+        for x := 1; x < width-1 ; x++ {
+            var gx,gy int
+            for i := 0; i < 3; i++ {
+                for j := 0; j < 3; j++ {
+                    px := int(grayPng.GrayAt(x+i-1, y+j-1).Y)
+                    gx += px*sobelHoriz[i][j]
+                    gy += px*sobelVerti[i][j]
+                }
+            }
+            gradX.SetGray(x, y, color.Gray{uint8(gx)})
+            gradY.SetGray(x, y, color.Gray{uint8(gy)})
+        }
+    }
+    edges := image.NewRGBA(bounds)
+    for y := 0; y < height; y++ {
+        for x := 0; x < width; x++ {
+            magX := int(gradX.GrayAt(x, y).Y)
+            magY := int(gradY.GrayAt(x, y).Y)
+            mag := uint8(intSqrt(magX*magX + magY*magY))
+            edges.Set(x, y, color.RGBA{mag, mag, mag, 255})
+        }
+    }
+    return edges
+}
 /*
 func savePng(fname string, newPng *image.RGBA) {
     out, err := os.Create(fname)
@@ -590,11 +647,8 @@ func routineOverlay(
     overlayCleanup(pngDir, pngName, FRAMES)
 }
 
-func routineVideoFx(/*movName,*/inVidName,framesDir,outVidName,expressionR,expressionG,expressionB string, interpRatio,interpAdj float64) {
-  /*if _, err := os.Stat(movName); err != nil {
-    log.Fatalf("routineVideoFx(): Error locating .mov video input 'src/%s': %v", movName, err)
-  }
-  */_, err := os.Stat(framesDir)
+func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expressionB string, interpRatio,interpAdj float64, edgeDetect bool) {
+  _, err := os.Stat(framesDir)
   if err != nil {
     if os.IsNotExist(err) {
       mkdir_err := os.Mkdir(framesDir, 0700)
@@ -610,21 +664,9 @@ func routineVideoFx(/*movName,*/inVidName,framesDir,outVidName,expressionR,expre
     os.MkdirAll(framesDir, 0700)
     fmt.Printf("\nroutineVideoFx(): Cleared contents of directory 'src/%s'\n", framesDir)
   }
-  /*convertCmd := exec.Command(
-    "ffmpeg", "-i", movName,
-    "-c:v", "libx264",
-    "-crf", "15",
-    "-preset", "slower",
-    "-an", inVidName,
-  )
-  convertOut, err := convertCmd.CombinedOutput()
-  if err != nil {
-    log.Fatalf("routineVideoFx(): Error occured while running convertCmd: %v", err)
-  }*/
   if _, err := os.Stat(inVidName); err != nil {
     log.Fatalf("routineVideoFx(): Error locating .mp4 video input 'src/%s': %v", inVidName, err)
   }
-  //fmt.Printf("\nroutineVideoFx(): convertCmd Output: \n\n%s\n(Successfully converted 'src/%s' to 'src/$s')\n", string(convertOut), movName, inVidName)
   teardownCmd := exec.Command(
     "ffmpeg", "-i", inVidName,
     "-vf", "fps=30", framesDir+"/"+outVidName+"_%03d.png",
@@ -634,7 +676,6 @@ func routineVideoFx(/*movName,*/inVidName,framesDir,outVidName,expressionR,expre
     log.Fatalf("routineVideoFx(): Error occured while running teardownCmd: %v", err)
   }
   fmt.Printf("\nroutineVideoFx(): teardownCmd Output:\n\n%s\n(Successfully took apart 'src/%s' into individual frames)\n", string(teardownOut), inVidName)
-  // We now have the frames in png_out/framesDir/vidName_%d.png; process the .pngs with effect then recombine with ffmpeg.
   frameFiles, err := ioutil.ReadDir(framesDir)
   if err != nil {
     log.Fatalf("routineVideoFx(): Error occured while trying to read names of frame .pngs in 'src/%s': %v", framesDir, err)
@@ -683,6 +724,11 @@ func routineVideoFx(/*movName,*/inVidName,framesDir,outVidName,expressionR,expre
     framePng, _, err := image.Decode(rawPng)
     if err != nil {
       log.Fatalf("routineVideoFx(): Error decoding raw frame '%s' with go/image: %v", pngFile.Name(), err)
+    }
+    if edgeDetect {
+        frameRGBA := image.NewRGBA(framePng.Bounds())
+        draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
+        framePng = getEdges(frameRGBA)
     }
     newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
     for x := 0; x < framePng.Bounds().Max.X; x++ {
@@ -823,14 +869,14 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-	    //"vid_in/odometer.mov", // movName
-        "vid_in/promobase_01062024.mp4", // inVidName 
-        "png_out/promo01062024_0", // framesDir
-        "promo01062024_0", // outVidName
-        "x*x + y*y", // expressionR
+        "vid_in/squirrel.mp4", // inVidName 
+        "png_out/squirrel3", // framesDir
+        "squirrel3", // outVidName
+        "x + y", // expressionR
         "x * y", // expressionG
-        "pow((x*y), 2) + (y*y) + (x*x)", // expressionB
-        0.975, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.015, // interpAdj (value represents difference in interp ratio by final frame)
+        "abs(sin(x*x*y*y))*256", // expressionB
+        0.9, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.091, // interpAdj (value represents difference in interp ratio by final frame)
+        true, // edgeDetect
     )
 }
