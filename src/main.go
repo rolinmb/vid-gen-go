@@ -716,14 +716,13 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
   }
   adjFactor := interpAdj / float64(len(frameFiles))
   for _, pngFile := range frameFiles {
-    rawPng, err := os.Open(framesDir+"/"+pngFile.Name()) 
+    rawFrame, err := os.Open(framesDir+"/"+pngFile.Name()) 
     if err != nil {
       log.Fatalf("routineVideoFx(): Error loading frame 'src/%s/%s' raw: %v", framesDir, pngFile.Name(), err)
     }
-    defer rawPng.Close()
-    framePng, _, err := image.Decode(rawPng)
+    framePng, _, err := image.Decode(rawFrame)
     if err != nil {
-      log.Fatalf("routineVideoFx(): Error decoding raw frame '%s' with go/image: %v", pngFile.Name(), err)
+      log.Fatalf("routineVideoFx(): Error decoding raw frame 'src/%s/%s' with go/image: %v", framesDir, pngFile.Name(), err)
     }
     if edgeDetect {
         frameRGBA := image.NewRGBA(framePng.Bounds())
@@ -763,14 +762,19 @@ func routineVideoFx(inVidName,framesDir,outVidName,expressionR,expressionG,expre
     newFname := fmt.Sprintf("%s/%s_fx_%s.png", framesDir, outVidName, idxStr)
     newFrame, err := os.Create(newFname)
     if err != nil {
-      log.Fatal("routineVideoFx(): Error creating '%s': %v", newFname, err)
+      log.Fatal("routineVideoFx(): Error creating 'src/%s/%s': %v", framesDir, newFname, err)
     }
-    defer newFrame.Close()
     err = png.Encode(newFrame, newPng)
     if err != nil {
-      log.Fatal("routineVideoFx(): Error encoding raw .png data to save to '%s': %v", newFname, err)
+      log.Fatal("routineVideoFx(): Error encoding raw .png data to save to 'src/%s/%s': %v", framesDir, newFname, err)
     }
-    fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame '%s'\n", newFname)
+    newFrame.Close()
+    fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame 'src/%s/%s'\n", framesDir, newFname)
+    rawFrame.Close()
+    err := os.Remove(framesDir+"/"+pngFile.Name())
+    if err != nil {
+        log.Fatalf("routineVideoFx(): Failed to remove source frame 'src/%s/%s': %v", framesDir, pngFile.Name(), err)
+    }
     ir += adjFactor
     if ir < 0.0 {
         ir = 0.0
@@ -869,14 +873,14 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/squirrel.mp4", // inVidName 
-        "png_out/squirrel3", // framesDir
-        "squirrel3", // outVidName
-        "x + y", // expressionR
-        "x * y", // expressionG
+        "vid_in/odometer.mp4", // inVidName 
+        "png_out/odometer3", // framesDir
+        "odometer3", // outVidName
+        "x*x + y*y", // expressionR
+        "abs((x+y)*(x-y))*256", // expressionG
         "abs(sin(x*x*y*y))*256", // expressionB
-        0.9, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.091, // interpAdj (value represents difference in interp ratio by final frame)
+        0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.005, // interpAdj (value represents difference in interp ratio by final frame)
         true, // edgeDetect
     )
 }
