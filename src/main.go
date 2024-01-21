@@ -918,23 +918,23 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/odometer.mp4", // inVidName 
-        "png_out/odometer6", // framesDir
-        "odometer6", // outVidName
-        "x*x+y*y", // expressionR
-        "1", // multFnR 
-        "abs((2*x+y)*(x-y))*255", // expressionG
-        "1", // multFnG
-        "abs(sin(x*x*y*y))*255", // expressionB
-        "1", // multFnB
+        "vid_in/spider.mp4", // inVidName 
+        "png_out/spider1", // framesDir
+        "spider1", // outVidName
+        "(x + y) * (x - y)", // expressionR
+        "1.0", // multFnR 
+        "x*x + y*y", // expressionG
+        "1.0", // multFnG
+        "-1 * ((x*x*y + y*y) * (x*x - y*y*y))", // expressionB
+        "1.0", // multFnB
         1.0, // scaleR
         1.0, // scaleAdjR
         1.0, // scaleG
         1.0, // scaleAdjG
         1.0, // scaleB
         1.0, // scaleAdjB
-        0.9, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.0, // interpAdj (value represents difference in interp ratio by final frame)
-        true, // edgeDetect
+        0.7, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.295, // interpAdj (value represents difference in interp ratio by final frame)
+        false, // edgeDetect
     )
 }
