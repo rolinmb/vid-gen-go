@@ -5,9 +5,9 @@ import (
     "log"
     "math"
     "go/parser"
-    "go/token"
-    "go/ast"
-    "reflect"
+    //"go/token"
+    //"go/ast"
+    //"reflect"
     "strings"
     "strconv"
     "image"
@@ -132,114 +132,6 @@ func distort(x,y,WIDTH,HEIGHT int, AMP,FREQ,PHASE float64) (int, int) {
 	dx = clamp(dx, 0, WIDTH-1)
 	dy = clamp(dy, 0, HEIGHT-1)
     return dx,dy
-}
-
-func evaluateASTNode(node interface{}, vars map[string]int) (float64, error) {
-    switch n := node.(type) {
-    case *ast.BasicLit:
-        if n.Kind == token.INT {
-            val, err := strconv.Atoi(n.Value)
-            if err != nil {
-                return 0, err
-            }
-            return float64(val), nil
-        } else if n.Kind == token.FLOAT {
-            val, err := strconv.ParseFloat(n.Value, 64)
-            if err != nil {
-                return 0, err
-            }
-            return val, nil
-        }
-    case *ast.Ident:
-        varName := n.Name
-        if val, ok := vars[varName]; ok {
-            return float64(val), nil
-        }
-        return 0, fmt.Errorf("Undefined variable: %s", varName)
-    case *ast.CallExpr:
-        funcName := n.Fun.(*ast.Ident).Name
-        args := n.Args
-        if funcName == "sin" && len(args) == 1 {
-            argVal, err := evaluateASTNode(args[0], vars)
-            if err != nil {
-                return 0, err
-            }
-            return math.Sin(argVal), nil
-        } else if funcName == "cos" && len(args) == 1 {
-            argVal, err := evaluateASTNode(args[0], vars)
-            if err != nil {
-                return 0, err
-            }
-            return math.Cos(argVal), nil
-        } else if funcName == "tan" && len(args) == 1 {
-            argVal, err := evaluateASTNode(args[0], vars)
-            if err != nil {
-                return 0, err
-            }
-            return math.Tan(argVal), nil
-        } else if funcName == "exp" && len(args) == 1 {
-            argVal, err := evaluateASTNode(args[0], vars)
-            if err != nil {
-                return 0, err
-            }
-            return math.Exp(argVal), nil
-        } else if funcName == "sqrt" && len(args) == 1 {
-            argVal1, err := evaluateASTNode(args[0], vars)
-            if err != nil {
-                return 0, err
-            }
-            return math.Sqrt(argVal1), nil
-        } else if funcName == "abs" && len(args) == 1 {
-            argVal1, err := evaluateASTNode(args[0], vars)
-            if err != nil {
-                return 0, err
-            }
-            return math.Abs(argVal1), nil
-        } else if funcName == "pow" && len(args) == 2 {
-            argVal1, err := evaluateASTNode(args[0], vars)
-            if err != nil {
-                return 0, err
-            }
-            argVal2, err := evaluateASTNode(args[1], vars)
-            if err != nil {
-                return 0, err
-            }
-            return math.Pow(argVal1, argVal2), nil
-        }
-    case *ast.BinaryExpr:
-        left, err := evaluateASTNode(n.X, vars)
-        if err != nil {
-            return 0, err
-        }
-        right, err := evaluateASTNode(n.Y, vars)
-        if err != nil {
-        return 0, err
-        }
-        switch n.Op {
-        case token.ADD:
-            return left + right, nil
-        case token.SUB:
-            return left - right, nil
-        case token.MUL:
-            return left * right, nil
-        case token.QUO:
-            return left / right, nil
-        }
-    case *ast.ParenExpr:
-        return evaluateASTNode(n.X, vars)
-    case *ast.UnaryExpr:
-        operand, err := evaluateASTNode(n.X, vars)
-        if err != nil {
-        return 0, err
-        }
-        switch n.Op {
-        case token.ADD:
-            return operand, nil
-        case token.SUB:
-            return -operand, nil
-        }
-    }
-    return 0, fmt.Errorf("Unsupported expression: %s", reflect.TypeOf(node))
 }
 
 func getPixelColor(
@@ -656,190 +548,190 @@ func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
     edgeDetect bool) {
-  _, err := os.Stat(framesDir)
-  if err != nil {
-    if os.IsNotExist(err) {
-      mkdir_err := os.Mkdir(framesDir, 0700)
-      if mkdir_err != nil {
-        fmt.Printf("\nroutineVideoFx(): Error occurred while creating 'src/%s'\n", framesDir, mkdir_err)
-      }
-    } else {
-      log.Fatalf("routineVideoFx(): Error occured while checking if 'src/%s' exists: %v", framesDir, err)
-    }
-    fmt.Printf("\nroutineVideoFx(): Created directory 'src/%s'\n", framesDir)
-  } else {
-    os.RemoveAll(framesDir)
-    os.MkdirAll(framesDir, 0700)
-    fmt.Printf("\nroutineVideoFx(): Cleared contents of directory 'src/%s'\n", framesDir)
-  }
-  if _, err := os.Stat(inVidName); err != nil {
-    log.Fatalf("routineVideoFx(): Error locating .mp4 video input 'src/%s': %v", inVidName, err)
-  }
-  teardownCmd := exec.Command(
-    "ffmpeg", "-i", inVidName,
-    "-vf", "fps=30", framesDir+"/"+outVidName+"_%03d.png",
-  )
-  teardownOut, err := teardownCmd.CombinedOutput()
-  if err != nil {
-    log.Fatalf("routineVideoFx(): Error occured while running teardownCmd: %v", err)
-  }
-  fmt.Printf("\nroutineVideoFx(): teardownCmd Output:\n\n%s\n(Successfully took apart 'src/%s' into individual frames)\n", string(teardownOut), inVidName)
-  frameFiles, err := ioutil.ReadDir(framesDir)
-  if err != nil {
-    log.Fatalf("routineVideoFx(): Error occured while trying to read names of frame .pngs in 'src/%s': %v", framesDir, err)
-  }
-  var EXPR,EXPG,EXPB,MFNR,MFNG,MFNB interface {}
-  var errR,errG,errB,errmR,errmG,errmB error
-  var wg sync.WaitGroup
-  wg.Add(6)
-  go func() {
-    defer wg.Done()
-    EXPR, errR = parser.ParseExpr(expressionR)
-  }()
-  go func() {
-    defer wg.Done()
-    EXPG, errG = parser.ParseExpr(expressionG)
-  }()
-  go func() {
-    defer wg.Done()
-    EXPB, errB = parser.ParseExpr(expressionB)
-  }()
-  go func() {
-    defer wg.Done()
-    MFNR, errmR = parser.ParseExpr(multFnR)
-  }()
-  go func() {
-    defer wg.Done()
-    MFNG, errmG = parser.ParseExpr(multFnG)
-  }()
-  go func() {
-    defer wg.Done()
-    MFNB, errmB = parser.ParseExpr(multFnB)
-  }()
-  wg.Wait()
-  if errR != nil {
-    log.Fatal(errR)
-  }
-  if errG != nil {
-    log.Fatal(errG)
-  }
-  if errB != nil {
-    log.Fatal(errB)
-  }
-  if errmR != nil {
-    log.Fatal(errR)
-  }
-  if errmG != nil {
-    log.Fatal(errG)
-  }
-  if errmB != nil {
-    log.Fatal(errB)
-  }
-  var ir float64
-  if interpRatio < 0.0 {
-    ir = 0.0
-  } else if interpRatio > 1.0 {
-    ir = 1.0
-  } else {
-    ir = interpRatio
-  }
-  adjFactor := interpAdj / float64(len(frameFiles))
-  for _, pngFile := range frameFiles {
-    rawFrame, err := os.Open(framesDir+"/"+pngFile.Name()) 
+    _, err := os.Stat(framesDir)
     if err != nil {
-      log.Fatalf("routineVideoFx(): Error loading frame 'src/%s/%s' raw: %v", framesDir, pngFile.Name(), err)
-    }
-    framePng, _, err := image.Decode(rawFrame)
-    if err != nil {
-      log.Fatalf("routineVideoFx(): Error decoding raw frame 'src/%s/%s' with go/image: %v", framesDir, pngFile.Name(), err)
-    }
-    if edgeDetect {
-        frameRGBA := image.NewRGBA(framePng.Bounds())
-        draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
-        framePng = getEdges(frameRGBA)
-    }
-    newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
-    for x := 0; x < framePng.Bounds().Max.X; x++ {
-        for y := 0; y < framePng.Bounds().Max.Y; y++ {
-            vars := map[string]int{ "x": x, "y": y }
-            rt, err := evaluateASTNode(EXPR, vars)
-            if err != nil {
-                log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
-            }
-            rval := uint8(rt)
-            gt, err := evaluateASTNode(EXPG, vars) 
-            if err != nil {
-                log.Fatalf("routineVideoFx(): Error evaulating parsed rGb expression: %v", err)
-            }
-            gval := uint8(gt)
-            bt, err := evaluateASTNode(EXPB, vars)
-            if err != nil {
-                log.Fatalf("routineVideoFx(): Error evaulating parsed rgB expression: %v", err)
-            }
-            bval := uint8(bt)
-            multr, err := evaluateASTNode(MFNR, vars)
-            if err != nil {
-                log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb multiplier expression: %v", err)
-            }
-            multg, err := evaluateASTNode(MFNG, vars)
-            if err != nil {
-                log.Fatalf("routineVideoFx(): Error evaulating parsed rGb multiplier expression: %v", err)
-            }
-            multb, err := evaluateASTNode(MFNB, vars)
-            if err != nil {
-                log.Fatalf("routineVideoFx(): Error evaulating parsed rgB multiplier expression: %v", err)
-            }
-            rs, gs, bs, _ := framePng.At(x, y).RGBA()
-            newPng.Set(x, y, color.RGBA{
-                uint8((ir*float64(rs) + (1.0-ir)*(scaleR*multr*float64(rval)))), 
-                uint8((ir*float64(gs) + (1.0-ir)*(scaleG*multg*float64(gval)))), 
-                uint8((ir*float64(bs) + (1.0-ir)*(scaleB*multb*float64(bval)))),
-                255,
-            })
+        if os.IsNotExist(err) {
+        mkdir_err := os.Mkdir(framesDir, 0700)
+        if mkdir_err != nil {
+            fmt.Printf("\nroutineVideoFx(): Error occurred while creating 'src/%s'\n", framesDir, mkdir_err)
         }
+        } else {
+        log.Fatalf("routineVideoFx(): Error occured while checking if 'src/%s' exists: %v", framesDir, err)
+        }
+        fmt.Printf("\nroutineVideoFx(): Created directory 'src/%s'\n", framesDir)
+    } else {
+        os.RemoveAll(framesDir)
+        os.MkdirAll(framesDir, 0700)
+        fmt.Printf("\nroutineVideoFx(): Cleared contents of directory 'src/%s'\n", framesDir)
     }
-    segments := strings.Split(pngFile.Name(), "_")
-    idxStr := strings.Replace(segments[len(segments)-1], ".png", "", -1)
-    newFname := fmt.Sprintf("%s/%s_fx_%s.png", framesDir, outVidName, idxStr)
-    newFrame, err := os.Create(newFname)
+    if _, err := os.Stat(inVidName); err != nil {
+        log.Fatalf("routineVideoFx(): Error locating .mp4 video input 'src/%s': %v", inVidName, err)
+    }
+    teardownCmd := exec.Command(
+        "ffmpeg", "-i", inVidName,
+        "-vf", "fps=30", framesDir+"/"+outVidName+"_%03d.png",
+    )
+    teardownOut, err := teardownCmd.CombinedOutput()
     if err != nil {
-      log.Fatal("routineVideoFx(): Error creating 'src/%s/%s': %v", framesDir, newFname, err)
+        log.Fatalf("routineVideoFx(): Error occured while running teardownCmd: %v", err)
     }
-    err = png.Encode(newFrame, newPng)
+    fmt.Printf("\nroutineVideoFx(): teardownCmd Output:\n\n%s\n(Successfully took apart 'src/%s' into individual frames)\n", string(teardownOut), inVidName)
+    frameFiles, err := ioutil.ReadDir(framesDir)
     if err != nil {
-      log.Fatal("routineVideoFx(): Error encoding raw .png data to save to 'src/%s/%s': %v", framesDir, newFname, err)
+        log.Fatalf("routineVideoFx(): Error occured while trying to read names of frame .pngs in 'src/%s': %v", framesDir, err)
     }
-    newFrame.Close()
-    fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame 'src/%s/%s'\n", framesDir, newFname)
-    rawFrame.Close()
-    err = os.Remove(framesDir+"/"+pngFile.Name())
-    if err != nil {
-        log.Fatalf("routineVideoFx(): Failed to remove source frame 'src/%s/%s': %v", framesDir, pngFile.Name(), err)
+    var EXPR,EXPG,EXPB,MFNR,MFNG,MFNB interface {}
+    var errR,errG,errB,errmR,errmG,errmB error
+    var wg sync.WaitGroup
+    wg.Add(6)
+    go func() {
+        defer wg.Done()
+        EXPR, errR = parser.ParseExpr(expressionR)
+    }()
+    go func() {
+        defer wg.Done()
+        EXPG, errG = parser.ParseExpr(expressionG)
+    }()
+    go func() {
+        defer wg.Done()
+        EXPB, errB = parser.ParseExpr(expressionB)
+    }()
+    go func() {
+        defer wg.Done()
+        MFNR, errmR = parser.ParseExpr(multFnR)
+    }()
+    go func() {
+        defer wg.Done()
+        MFNG, errmG = parser.ParseExpr(multFnG)
+    }()
+    go func() {
+        defer wg.Done()
+        MFNB, errmB = parser.ParseExpr(multFnB)
+    }()
+    wg.Wait()
+    if errR != nil {
+        log.Fatal(errR)
     }
-    ir += adjFactor
-    if ir < 0.0 {
+    if errG != nil {
+        log.Fatal(errG)
+    }
+    if errB != nil {
+        log.Fatal(errB)
+    }
+    if errmR != nil {
+        log.Fatal(errR)
+    }
+    if errmG != nil {
+        log.Fatal(errG)
+    }
+    if errmB != nil {
+        log.Fatal(errB)
+    }
+    var ir float64
+    if interpRatio < 0.0 {
         ir = 0.0
-    } else if ir > (interpRatio+interpAdj) || ir > 1.0 {
-        ir = interpRatio+interpAdj
+    } else if interpRatio > 1.0 {
+        ir = 1.0
+    } else {
+        ir = interpRatio
     }
-    scaleR *= scaleAdjR
-    scaleG *= scaleAdjG
-    scaleB *= scaleAdjB
-  }
-  // Maybe need to get the framerate of vidInName so we can pass it to recombineCmd and thus the resulting outVidName.mp4 is of the same FPS.
-  recombineCmd := exec.Command(
-    "ffmpeg", "-y",
-    "-framerate", "30",
-    "-i", framesDir+"/"+outVidName+"_fx_%03d.png",
-    "-c:v", "libx264",  
-    "-pix_fmt", "yuv420p",
-    "vid_out/"+outVidName+".mp4",
-  )
-  recombineOut, err := recombineCmd.CombinedOutput()
-  if err != nil {
-    log.Fatalf("routineVideoFx(): Error occured while running recombineCmd: %v", err)
-  }
-  fmt.Printf("\nroutineVideoFx(): recombineCmd Output:\n\n%s\n(Successfully created 'src/vid_out/%s.mp4')\n", string(recombineOut), outVidName)
+    adjFactor := interpAdj / float64(len(frameFiles))
+    for _, pngFile := range frameFiles {
+        rawFrame, err := os.Open(framesDir+"/"+pngFile.Name()) 
+        if err != nil {
+        log.Fatalf("routineVideoFx(): Error loading frame 'src/%s/%s' raw: %v", framesDir, pngFile.Name(), err)
+        }
+        framePng, _, err := image.Decode(rawFrame)
+        if err != nil {
+        log.Fatalf("routineVideoFx(): Error decoding raw frame 'src/%s/%s' with go/image: %v", framesDir, pngFile.Name(), err)
+        }
+        if edgeDetect {
+            frameRGBA := image.NewRGBA(framePng.Bounds())
+            draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
+            framePng = getEdges(frameRGBA)
+        }
+        newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
+        for x := 0; x < framePng.Bounds().Max.X; x++ {
+            for y := 0; y < framePng.Bounds().Max.Y; y++ {
+                vars := map[string]int{ "x": x, "y": y }
+                rt, err := evaluateASTNode(EXPR, vars)
+                if err != nil {
+                    log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
+                }
+                rval := uint8(rt)
+                gt, err := evaluateASTNode(EXPG, vars) 
+                if err != nil {
+                    log.Fatalf("routineVideoFx(): Error evaulating parsed rGb expression: %v", err)
+                }
+                gval := uint8(gt)
+                bt, err := evaluateASTNode(EXPB, vars)
+                if err != nil {
+                    log.Fatalf("routineVideoFx(): Error evaulating parsed rgB expression: %v", err)
+                }
+                bval := uint8(bt)
+                multr, err := evaluateASTNode(MFNR, vars)
+                if err != nil {
+                    log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb multiplier expression: %v", err)
+                }
+                multg, err := evaluateASTNode(MFNG, vars)
+                if err != nil {
+                    log.Fatalf("routineVideoFx(): Error evaulating parsed rGb multiplier expression: %v", err)
+                }
+                multb, err := evaluateASTNode(MFNB, vars)
+                if err != nil {
+                    log.Fatalf("routineVideoFx(): Error evaulating parsed rgB multiplier expression: %v", err)
+                }
+                rs, gs, bs, _ := framePng.At(x, y).RGBA()
+                newPng.Set(x, y, color.RGBA{
+                    uint8((ir*float64(rs) + (1.0-ir)*(scaleR*multr*float64(rval)))), 
+                    uint8((ir*float64(gs) + (1.0-ir)*(scaleG*multg*float64(gval)))), 
+                    uint8((ir*float64(bs) + (1.0-ir)*(scaleB*multb*float64(bval)))),
+                    255,
+                })
+            }
+        }
+        segments := strings.Split(pngFile.Name(), "_")
+        idxStr := strings.Replace(segments[len(segments)-1], ".png", "", -1)
+        newFname := fmt.Sprintf("%s/%s_fx_%s.png", framesDir, outVidName, idxStr)
+        newFrame, err := os.Create(newFname)
+        if err != nil {
+            log.Fatal("routineVideoFx(): Error creating 'src/%s/%s': %v", framesDir, newFname, err)
+        }
+        err = png.Encode(newFrame, newPng)
+        if err != nil {
+            log.Fatal("routineVideoFx(): Error encoding raw .png data to save to 'src/%s/%s': %v", framesDir, newFname, err)
+        }
+        newFrame.Close()
+        //fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame 'src/%s/%s'\n", framesDir, newFname)
+        rawFrame.Close()
+        err = os.Remove(framesDir+"/"+pngFile.Name())
+        if err != nil {
+            log.Fatalf("routineVideoFx(): Failed to remove source frame 'src/%s/%s': %v", framesDir, pngFile.Name(), err)
+        }
+        ir += adjFactor
+        if ir < 0.0 {
+            ir = 0.0
+        } else if  ir > (interpRatio + interpAdj) {
+            ir = interpRatio + interpAdj
+        }
+        scaleR *= scaleAdjR
+        scaleG *= scaleAdjG
+        scaleB *= scaleAdjB
+    }
+    // Maybe need to get the framerate of vidInName so we can pass it to recombineCmd and thus the resulting outVidName.mp4 is of the same FPS.
+    recombineCmd := exec.Command(
+        "ffmpeg", "-y",
+        "-framerate", "30",
+        "-i", framesDir+"/"+outVidName+"_fx_%03d.png",
+        "-c:v", "libx264",  
+        "-pix_fmt", "yuv420p",
+        "vid_out/"+outVidName+".mp4",
+    )
+    recombineOut, err := recombineCmd.CombinedOutput()
+    if err != nil {
+        log.Fatalf("routineVideoFx(): Error occured while running recombineCmd: %v", err)
+    }
+    fmt.Printf("\nroutineVideoFx(): recombineCmd Output:\n\n%s\n(Successfully created 'src/vid_out/%s.mp4')\n", string(recombineOut), outVidName)
 }
 
 func main() {
@@ -918,14 +810,14 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/spider.mp4", // inVidName 
-        "png_out/spider1", // framesDir
-        "spider1", // outVidName
-        "(x + y) * (x - y)", // expressionR
+        "vid_in/foggier_walk.mp4", // inVidName 
+        "png_out/foggier_walk2", // framesDir
+        "foggier_walk2", // outVidName
+        "(x*x - y*y)", // expressionR
         "1.0", // multFnR 
-        "x*x + y*y", // expressionG
+        "(x + y)", // expressionG
         "1.0", // multFnG
-        "-1 * ((x*x*y + y*y) * (x*x - y*y*y))", // expressionB
+        "(x + y*y) + (x*x + y)", // expressionB
         "1.0", // multFnB
         1.0, // scaleR
         1.0, // scaleAdjR
@@ -933,8 +825,8 @@ func main() {
         1.0, // scaleAdjG
         1.0, // scaleB
         1.0, // scaleAdjB
-        0.7, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.295, // interpAdj (value represents difference in interp ratio by final frame)
+        0.995, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.295, // interpAdj (value represents difference in interp ratio by final frame)
         false, // edgeDetect
     )
 }
