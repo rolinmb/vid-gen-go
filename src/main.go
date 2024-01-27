@@ -810,23 +810,23 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/foggier_walk.mp4", // inVidName 
-        "png_out/foggier_walk2", // framesDir
-        "foggier_walk2", // outVidName
-        "(x*x - y*y)", // expressionR
-        "1.0", // multFnR 
-        "(x + y)", // expressionG
-        "1.0", // multFnG
-        "(x + y*y) + (x*x + y)", // expressionB
-        "1.0", // multFnB
+        "vid_in/driving_fog.mp4", // inVidName 
+        "png_out/driving_fog2", // framesDir
+        "driving_fog2", // outVidName
+        "(x*x + y*y)", // expressionR
+        "1.05 + 0.2*x", // multFnR 
+        "(x*y)", // expressionG
+        "1.05 + 0.2*y", // multFnG
+        "(x*x - y*y)", // expressionB
+        "1.05 + 0.1*x + 0.1*y", // multFnB
         1.0, // scaleR
         1.0, // scaleAdjR
         1.0, // scaleG
         1.0, // scaleAdjG
         1.0, // scaleB
         1.0, // scaleAdjB
-        0.995, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.295, // interpAdj (value represents difference in interp ratio by final frame)
+        0.98, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.03, // interpAdj (value represents difference in interp ratio by final frame)
         false, // edgeDetect
     )
 }
