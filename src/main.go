@@ -426,7 +426,7 @@ func routineOverlay(
     fInName,fOutName,pngDir,pngName,vidName,EXPRESSION1,EXPRESSION2 string,
     cropWidth,cropHeight,FRAMES int,
     AMP1,AMP1FACTOR,AMP2,AMP2FACTOR,FREQ1,FREQ2,PHASE1,PHASE2,MULTIPLIER1,MULTIPLIER2,SCALE1,SCALE1FACTOR,SCALE2,SCALE2FACTOR,INTERPFACTOR1,IF1AMP,IF1FREQ,INTERPFACTOR2,IF2AMP,IF2FREQ float64,
-    IF1CONST,IF2CONST,edgeDetect bool) {
+    IF1CONST,IF2CONST,edgeDetect,invertSrc bool) {
     if cropWidth < 1 || cropHeight < 1 {
         log.Fatalf("cropWidth (= %d) or cropHeight (= %d) cannot be negative or zero", cropWidth, cropHeight)
         return
@@ -523,6 +523,11 @@ func routineOverlay(
                 gI := uint8(float64(g1)*IF1 + float64(g2)*(1.0-IF1))
                 bI := uint8(float64(b1)*IF1 + float64(b2)*(1.0-IF1))   
                 rC,gC,bC, _ := croppedPng.At(x, y).RGBA()
+                if invertSrc {
+                    rC = 255 - rC
+                    gC = 255 - gC
+                    bC = 255 - bC
+                }
                 r := uint8(float64(rC)*(1.0-IF2) + float64(rI)*IF2)
                 g := uint8(float64(gC)*(1.0-IF2) + float64(gI)*IF2)
                 b := uint8(float64(bC)*(1.0-IF2) + float64(bI)*IF2)
@@ -547,7 +552,7 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
-    edgeDetect bool) {
+    edgeDetect,invertSrc bool) {
     _, err := os.Stat(framesDir)
     if err != nil {
         if os.IsNotExist(err) {
@@ -681,7 +686,12 @@ func routineVideoFx(
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed rgB multiplier expression: %v", err)
                 }
-                rs, gs, bs, _ := framePng.At(x, y).RGBA()
+                rs,gs,bs, _ := framePng.At(x, y).RGBA()
+                if invertSrc {
+                    rs = 255 - rs
+                    gs = 255 - gs
+                    bs = 255 - bs
+                }
                 newPng.Set(x, y, color.RGBA{
                     uint8((ir*float64(rs) + (1.0-ir)*(scaleR*multr*float64(rval)))), 
                     uint8((ir*float64(gs) + (1.0-ir)*(scaleG*multg*float64(gval)))), 
@@ -807,26 +817,28 @@ func main() {
         true,  // IF1CONST
         true,  // IF2CONST
         false, // edgeDetect
+        false // invertSrc
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
         "vid_in/driving_fog.mp4", // inVidName 
-        "png_out/driving_fog2", // framesDir
-        "driving_fog2", // outVidName
-        "(x*x + y*y)", // expressionR
-        "1.05 + 0.2*x", // multFnR 
-        "(x*y)", // expressionG
-        "1.05 + 0.2*y", // multFnG
-        "(x*x - y*y)", // expressionB
-        "1.05 + 0.1*x + 0.1*y", // multFnB
-        1.0, // scaleR
-        1.0, // scaleAdjR
-        1.0, // scaleG
-        1.0, // scaleAdjG
-        1.0, // scaleB
-        1.0, // scaleAdjB
-        0.98, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.03, // interpAdj (value represents difference in interp ratio by final frame)
+        "png_out/driving_fog1", // framesDir
+        "driving_fog1", // outVidName
+        "0.5 + 0.5*sin(x/20)", // expressionR
+        "1.1 + 0.2*sin(x/10)", // multFnR 
+        "0.5 + 0.5*sin(y/20)", // expressionG
+        "1.1 + 0.2*sin(y/10)", // multFnG
+        "0.5 + 0.5*sin((x+y)/20)", // expressionB
+        "1.1 + 0.2*sin((x+y)/10)", // multFnB
+        1.1, // scaleR
+        1.001, // scaleAdjR
+        1.1, // scaleG
+        1.001, // scaleAdjG
+        1.1, // scaleB
+        1.001, // scaleAdjB
+        0.9975, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.01, // interpAdj (value represents difference in interp ratio by final frame)
         false, // edgeDetect
+        false, // invertSrc
     )
 }
