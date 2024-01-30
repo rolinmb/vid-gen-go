@@ -5,9 +5,6 @@ import (
     "log"
     "math"
     "go/parser"
-    //"go/token"
-    //"go/ast"
-    //"reflect"
     "strings"
     "strconv"
     "image"
@@ -139,7 +136,7 @@ func getPixelColor(
     SCALE,COMPL,CLRFACTOR float64,
     expr interface{}) (uint8, uint8, uint8) {
     vars := map[string]int{"x": x, "y": y}
-    result, err := evaluateASTNode(expr, vars)
+    result, err := evalExprTreeNode(expr, vars)
     if err != nil {
         log.Fatal(err)
 	    return uint8(0),uint8(0),uint8(0)
@@ -659,30 +656,30 @@ func routineVideoFx(
         for x := 0; x < framePng.Bounds().Max.X; x++ {
             for y := 0; y < framePng.Bounds().Max.Y; y++ {
                 vars := map[string]int{ "x": x, "y": y }
-                rt, err := evaluateASTNode(EXPR, vars)
+                rt, err := evalExprTreeNode(EXPR, vars)
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
                 }
                 rval := uint8(rt)
-                gt, err := evaluateASTNode(EXPG, vars) 
+                gt, err := evalExprTreeNode(EXPG, vars) 
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed rGb expression: %v", err)
                 }
                 gval := uint8(gt)
-                bt, err := evaluateASTNode(EXPB, vars)
+                bt, err := evalExprTreeNode(EXPB, vars)
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed rgB expression: %v", err)
                 }
                 bval := uint8(bt)
-                multr, err := evaluateASTNode(MFNR, vars)
+                multr, err := evalExprTreeNode(MFNR, vars)
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb multiplier expression: %v", err)
                 }
-                multg, err := evaluateASTNode(MFNG, vars)
+                multg, err := evalExprTreeNode(MFNG, vars)
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed rGb multiplier expression: %v", err)
                 }
-                multb, err := evaluateASTNode(MFNB, vars)
+                multb, err := evalExprTreeNode(MFNB, vars)
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed rgB multiplier expression: %v", err)
                 }
@@ -719,11 +716,7 @@ func routineVideoFx(
             log.Fatalf("routineVideoFx(): Failed to remove source frame 'src/%s/%s': %v", framesDir, pngFile.Name(), err)
         }
         ir += adjFactor
-        if ir < 0.0 {
-            ir = 0.0
-        } else if  ir > (interpRatio + interpAdj) {
-            ir = interpRatio + interpAdj
-        }
+        ir = math.Max(0.0, math.Min(ir, interpRatio + interpAdj))
         scaleR *= scaleAdjR
         scaleG *= scaleAdjG
         scaleB *= scaleAdjB
@@ -821,23 +814,23 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/driving_fog.mp4", // inVidName 
-        "png_out/driving_fog1", // framesDir
-        "driving_fog1", // outVidName
-        "0.5 + 0.5*sin(x/20)", // expressionR
-        "1.1 + 0.2*sin(x/10)", // multFnR 
-        "0.5 + 0.5*sin(y/20)", // expressionG
-        "1.1 + 0.2*sin(y/10)", // multFnG
-        "0.5 + 0.5*sin((x+y)/20)", // expressionB
-        "1.1 + 0.2*sin((x+y)/10)", // multFnB
-        1.1, // scaleR
-        1.001, // scaleAdjR
-        1.1, // scaleG
-        1.001, // scaleAdjG
-        1.1, // scaleB
-        1.001, // scaleAdjB
-        0.9975, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.01, // interpAdj (value represents difference in interp ratio by final frame)
+        "vid_in/passenger_rain_a.mp4", // inVidName 
+        "png_out/passenger_rain_a0", // framesDir
+        "passenger_rain_a0", // outVidName
+        "(2*sin(x/20 + y/20) * (x &^ y)",                  // expressionR
+        "1.0005 + 0.0005*tan(x+y/10) * ((x | y) >> 7)",      // multFnR 
+        "(sin(x/5 + y/5) + (x ^ y)",                    // expressionG
+        "1.0005 + 0.0005*sin(x+y/10) * ((x & y) << 11)",       // multFnG
+        "(sin(x/10 + y/10) * ((x ^ y) & (x + y))",        // expressionB
+        "1.0005 + 0.005*cos((2*x+y)/10) * ((x | y) >> 17)",      // multFnB
+        1.0001, // scaleR
+        1.0001, // scaleAdjR
+        1.0001, // scaleG
+        1.0001, // scaleAdjG
+        1.0001, // scaleB
+        1.0001, // scaleAdjB
+        0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.004, // interpAdj (value represents difference in interp ratio by final frame)
         false, // edgeDetect
         false, // invertSrc
     )
