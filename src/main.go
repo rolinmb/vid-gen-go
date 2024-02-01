@@ -814,24 +814,24 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/passenger_rain_a.mp4", // inVidName 
-        "png_out/passenger_rain_a0", // framesDir
-        "passenger_rain_a0", // outVidName
-        "(2*sin(x/20 + y/20) * (x &^ y)",                  // expressionR
-        "1.0005 + 0.0005*tan(x+y/10) * ((x | y) >> 7)",      // multFnR 
-        "(sin(x/5 + y/5) + (x ^ y)",                    // expressionG
-        "1.0005 + 0.0005*sin(x+y/10) * ((x & y) << 11)",       // multFnG
-        "(sin(x/10 + y/10) * ((x ^ y) & (x + y))",        // expressionB
-        "1.0005 + 0.005*cos((2*x+y)/10) * ((x | y) >> 17)",      // multFnB
+        "vid_in/dawn.mp4", // inVidName 
+        "png_out/dawn1", // framesDir
+        "dawn1", // outVidName
+        "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionR
+        "1.00001", // multFnR 
+        "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionG
+        "1.00001", // multFnG
+        "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionB
+        "1.00001", // multFnB
         1.0001, // scaleR
-        1.0001, // scaleAdjR
+        1.0005, // scaleAdjR
         1.0001, // scaleG
-        1.0001, // scaleAdjG
+        1.0005, // scaleAdjG
         1.0001, // scaleB
-        1.0001, // scaleAdjB
+        1.0005, // scaleAdjB
         0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.004, // interpAdj (value represents difference in interp ratio by final frame)
-        false, // edgeDetect
+        0.005, // interpAdj (value represents difference in interp ratio by final frame)
+        true, // edgeDetect
         false, // invertSrc
     )
 }
