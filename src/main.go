@@ -16,62 +16,6 @@ import (
     "io/ioutil"
     "sync"
 )
-
-var sobelHoriz = [3][3]int{
-    {-1, 0, 1},
-    {-2, 0, 2},
-    {-1, 0, 1},
-}
-
-var sobelVerti = [3][3]int{
-    {-1, -2, -1},
-    {0, 0, 0},
-    {1, 2, 1},
-}
-
-func intSqrt(n int) int {
-    var x,y int
-    for x = n; x > 0; x = y {
-        y = (x + n/x) / 2
-        if y >= x {
-            return x
-        }
-    }
-    return 0
-}
-
-func getEdges(inputPng *image.RGBA) *image.RGBA {
-    bounds := inputPng.Bounds()
-    grayPng := image.NewGray(bounds)
-    draw.Draw(grayPng, grayPng.Bounds(), inputPng, image.Point{}, draw.Over)
-    width,height := bounds.Dx(), bounds.Dy()
-    gradX := image.NewGray(bounds)
-    gradY := image.NewGray(bounds)
-    for y := 1; y < height-1; y++ {
-        for x := 1; x < width-1 ; x++ {
-            var gx,gy int
-            for i := 0; i < 3; i++ {
-                for j := 0; j < 3; j++ {
-                    px := int(grayPng.GrayAt(x+i-1, y+j-1).Y)
-                    gx += px*sobelHoriz[i][j]
-                    gy += px*sobelVerti[i][j]
-                }
-            }
-            gradX.SetGray(x, y, color.Gray{uint8(gx)})
-            gradY.SetGray(x, y, color.Gray{uint8(gy)})
-        }
-    }
-    edges := image.NewRGBA(bounds)
-    for y := 0; y < height; y++ {
-        for x := 0; x < width; x++ {
-            magX := int(gradX.GrayAt(x, y).Y)
-            magY := int(gradY.GrayAt(x, y).Y)
-            mag := uint8(intSqrt(magX*magX + magY*magY))
-            edges.Set(x, y, color.RGBA{mag, mag, mag, 255})
-        }
-    }
-    return edges
-}
 /*
 func savePng(fname string, newPng *image.RGBA) {
     out, err := os.Create(fname)
@@ -549,7 +493,8 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
-    edgeDetect,invertSrc bool) {
+    edgeDetect,applyKmc,invertSrc bool,
+    kmcFactor int) {
     _, err := os.Stat(framesDir)
     if err != nil {
         if os.IsNotExist(err) {
@@ -651,6 +596,9 @@ func routineVideoFx(
             frameRGBA := image.NewRGBA(framePng.Bounds())
             draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
             framePng = getEdges(frameRGBA)
+        }
+        if applyKmc {
+            framePng = applyKmeans(framePng, kmcFactor)
         }
         newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
         for x := 0; x < framePng.Bounds().Max.X; x++ {
@@ -831,7 +779,9 @@ func main() {
         1.0005, // scaleAdjB
         0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
         0.005, // interpAdj (value represents difference in interp ratio by final frame)
-        true, // edgeDetect
+        false, // edgeDetect
+        true, // applyKmc
         false, // invertSrc
+        5, // kmcFactor
     )
 }

@@ -4,3 +4,4 @@ src/png_in
 src/vid_in
 src/png_out
 src/vid_out
+go.sum
