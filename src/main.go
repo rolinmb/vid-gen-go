@@ -762,9 +762,9 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/dawn.mp4", // inVidName 
-        "png_out/dawn1", // framesDir
-        "dawn1", // outVidName
+        "vid_in/brownline.mp4", // inVidName 
+        "png_out/brownline0", // framesDir
+        "brownline0", // outVidName
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionR
         "1.00001", // multFnR 
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionG
@@ -777,8 +777,8 @@ func main() {
         1.0005, // scaleAdjG
         1.0001, // scaleB
         1.0005, // scaleAdjB
-        0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.005, // interpAdj (value represents difference in interp ratio by final frame)
+        0.9999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.99989, // interpAdj (value represents difference in interp ratio by final frame)
         false, // edgeDetect
         true, // applyKmc
         false, // invertSrc
