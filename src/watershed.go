@@ -1,11 +1,8 @@
 package main
 
 import (
-    "fmt"
     "image"
     "image/color"
-    "image/png"
-    "os"
 )
 
 type Queue struct { //  FIFO queue
@@ -26,7 +23,7 @@ func (q *Queue) isEmpty() bool {
     return len(q.items) == 0
 }
 
-func watershed(img image.Image) *image.RGBA {
+func applyWatershed(img image.Image) *image.RGBA {
     bounds := img.Bounds()
     result := image.NewRGBA(bounds)
     marker := image.NewGray(bounds)

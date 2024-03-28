@@ -1,11 +1,8 @@
 package main
 
 import (
-    "fmt"
     "image"
     "image/color"
-    "image/jpeg"
-    "os"
     "math"
 )
 

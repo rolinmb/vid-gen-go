@@ -1,15 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
-	"image/png"
 	"math"
-	"os"
 )
 
-func waveletTransform(img image.Image) ([][]float64, [][]float64, [][]float64) {
+func waveletStep(signal []float64) ([]float64, []float64) {
+	n := len(signal)
+	approximation := make([]float64, n)
+	detail := make([]float64, n)
+	for i := 0; i < n/2; i++ {
+		approximation[i] = (signal[2*i] + signal[2*i+1]) / math.Sqrt2
+		detail[i] = (signal[2*i] - signal[2*i+1]) / math.Sqrt2
+	}
+	return approximation, detail
+}
+
+func waveletTransform(img image.Image) ([][]float64, [][]float64) {
 	bounds := img.Bounds()
 	width, height := bounds.Dx(), bounds.Dy()
 	approximations := make([][]float64, 3)
@@ -33,17 +41,6 @@ func waveletTransform(img image.Image) ([][]float64, [][]float64, [][]float64) {
 		approximations[i], details[i] = waveletStep(approximations[i])
 	}
 	return approximations, details
-}
-
-func waveletStep(signal []float64) ([]float64, []float64) {
-	n := len(signal)
-	approximation := make([]float64, n)
-	detail := make([]float64, n)
-	for i := 0; i < n/2; i++ {
-		approximation[i] = (signal[2*i] + signal[2*i+1]) / math.Sqrt2
-		detail[i] = (signal[2*i] - signal[2*i+1]) / math.Sqrt2
-	}
-	return approximation, detail
 }
 
 func applyWaveletInverse(approximations, details [][]float64, width, height int) *image.RGBA {

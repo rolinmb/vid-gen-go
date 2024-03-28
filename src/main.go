@@ -493,7 +493,7 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
-    edgeDetect,applyKmc,invertSrc bool,
+    edgeDetect,applyKmc,applyWater,applyWave,applyCosine,invertSrc bool,
     kmcFactor int) {
     _, err := os.Stat(framesDir)
     if err != nil {
@@ -599,6 +599,18 @@ func routineVideoFx(
         }
         if applyKmc {
             framePng = applyKmeans(framePng, kmcFactor)
+        }
+        if applyWater {
+            framePng = applyWatershed(framePng)
+        }
+        if applyWave {
+            bounds := framePng.Bounds()
+            ww, wh := bounds.Dx(), bounds.Dy()
+            approx, details := waveletTransform(framePng)
+            framePng = applyWaveletInverse(approx, details, ww, wh)
+        }
+        if applyCosine {
+            framePng = applyDct(framePng)
         }
         newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
         for x := 0; x < framePng.Bounds().Max.X; x++ {
@@ -762,9 +774,9 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/brownline.mp4", // inVidName 
-        "png_out/brownline0", // framesDir
-        "brownline0", // outVidName
+        "vid_in/drive_lightning_1.mp4", // inVidName 
+        "png_out/drvlight2", // framesDir
+        "drvlight2", // outVidName
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionR
         "1.00001", // multFnR 
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionG
@@ -777,10 +789,13 @@ func main() {
         1.0005, // scaleAdjG
         1.0001, // scaleB
         1.0005, // scaleAdjB
-        0.9999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.99989, // interpAdj (value represents difference in interp ratio by final frame)
+        0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.189, // interpAdj (value represents difference in interp ratio by final frame)
         false, // edgeDetect
         true, // applyKmc
+        false, // applyWater
+        false, // applyWave
+        false, // applyCosine
         false, // invertSrc
         5, // kmcFactor
     )
