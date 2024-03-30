@@ -800,9 +800,9 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/drive_lightning_2.mp4", // inVidName 
-        "png_out/drvlight2_3", // framesDir
-        "drvlight2_3", // outVidName
+        "vid_in/moon_zoom.mp4", // inVidName 
+        "png_out/moonzoom_2", // framesDir
+        "moonzoom_2", // outVidName
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionR
         "1.00001", // multFnR 
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionG
@@ -816,16 +816,16 @@ func main() {
         1.0001, // scaleB
         1.0005, // scaleAdjB
         0.998, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.089, // interpAdj (value represents difference in interp ratio by final frame)
+        -0.189, // interpAdj (value represents difference in interp ratio by final frame)
         false, true, // edgeDetect, edBefore
         false, true, // applyKmc, kmcBefore
         false, true, // applyWater, wtrBefore
-        false, true, // applyWave, waveBefore
-        true, false, // applySine, sinBefore
+        true, false, // applyWave, waveBefore
+        false, true, // applySine, sinBefore
         false, true, // applyCosine, cosBefore
         false, // invertSrc
         5, // kmcFactor
-        32, // dstBlockSize
+        8, // dstBlockSize
         8, // dctBlockSize
     )
 }
