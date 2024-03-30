@@ -493,8 +493,8 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
-    edgeDetect,applyKmc,applyWater,applyWave,applyCosine,invertSrc bool,
-    kmcFactor int) {
+    edgeDetect,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,invertSrc bool,
+    kmcFactor,dstBlockSize,dctBlockSize int) {
     _, err := os.Stat(framesDir)
     if err != nil {
         if os.IsNotExist(err) {
@@ -592,25 +592,28 @@ func routineVideoFx(
         if err != nil {
         log.Fatalf("routineVideoFx(): Error decoding raw frame 'src/%s/%s' with go/image: %v", framesDir, pngFile.Name(), err)
         }
-        if edgeDetect {
+        if edgeDetect && edBefore {
             frameRGBA := image.NewRGBA(framePng.Bounds())
             draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
             framePng = getEdges(frameRGBA)
         }
-        if applyKmc {
+        if applyKmc && kmcBefore {
             framePng = applyKmeans(framePng, kmcFactor)
         }
-        if applyWater {
+        if applyWater && wtrBefore {
             framePng = applyWatershed(framePng)
         }
-        if applyWave {
+        if applyWave && waveBefore {
             bounds := framePng.Bounds()
             ww, wh := bounds.Dx(), bounds.Dy()
             approx, details := waveletTransform(framePng)
             framePng = applyWaveletInverse(approx, details, ww, wh)
         }
-        if applyCosine {
-            framePng = applyDct(framePng)
+        if applySine && sinBefore {
+            framePng = applyDst(framePng, dstBlockSize)
+        }
+        if applyCosine && cosBefore {
+            framePng = applyDct(framePng, dctBlockSize)
         }
         newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
         for x := 0; x < framePng.Bounds().Max.X; x++ {
@@ -656,6 +659,29 @@ func routineVideoFx(
                     255,
                 })
             }
+        }
+        if edgeDetect && !edBefore {
+            frameRGBA := image.NewRGBA(framePng.Bounds())
+            draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
+            framePng = getEdges(frameRGBA)
+        }
+        if applyKmc && !kmcBefore {
+            framePng = applyKmeans(framePng, kmcFactor)
+        }
+        if applyWater && !wtrBefore {
+            framePng = applyWatershed(framePng)
+        }
+        if applyWave && !waveBefore {
+            bounds := framePng.Bounds()
+            ww, wh := bounds.Dx(), bounds.Dy()
+            approx, details := waveletTransform(framePng)
+            framePng = applyWaveletInverse(approx, details, ww, wh)
+        }
+        if applySine && !sinBefore {
+            framePng = applyDst(framePng, dstBlockSize)
+        }
+        if applyCosine && !cosBefore {
+            framePng = applyDct(framePng, dctBlockSize)
         }
         segments := strings.Split(pngFile.Name(), "_")
         idxStr := strings.Replace(segments[len(segments)-1], ".png", "", -1)
@@ -774,9 +800,9 @@ func main() {
     )
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/drive_lightning_1.mp4", // inVidName 
-        "png_out/drvlight2", // framesDir
-        "drvlight2", // outVidName
+        "vid_in/drive_lightning_2.mp4", // inVidName 
+        "png_out/drvlight2_2", // framesDir
+        "drvlight2_2", // outVidName
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionR
         "1.00001", // multFnR 
         "(sin(x/10) + sin(y/10)) / (1 + sqrt(x*x + y*y))", // expressionG
@@ -789,14 +815,23 @@ func main() {
         1.0005, // scaleAdjG
         1.0001, // scaleB
         1.0005, // scaleAdjB
-        0.99, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.189, // interpAdj (value represents difference in interp ratio by final frame)
+        0.998, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.089, // interpAdj (value represents difference in interp ratio by final frame)
         false, // edgeDetect
-        true, // applyKmc
+        true, // edBefore
+        false, // applyKmc
+        true, // kmcBefore
         false, // applyWater
+        true, // wtrBefore
         false, // applyWave
+        true, // waveBefore
+        true, // applySine
+        true, // sinBefore
         false, // applyCosine
+        true, // cosBefore
         false, // invertSrc
         5, // kmcFactor
+        16, // dstBlockSize
+        8, // dctBlockSize
     )
 }

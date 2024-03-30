@@ -6,10 +6,6 @@ import (
     "math"
 )
 
-const (
-    blockSize = 8
-)
-
 func DCT(block [][]float64) [][]float64 {
     n := len(block)
     dct := make([][]float64, n)
@@ -67,7 +63,7 @@ func IDCT(dct [][]float64) [][]float64 {
     return block
 }
 
-func extractBlock(img image.Image, x, y int) [][]float64 {
+func extractBlock(img image.Image, x,y,blockSize int) [][]float64 {
     block := make([][]float64, blockSize)
     for i := 0; i < blockSize; i++ {
         block[i] = make([]float64, blockSize)
@@ -86,7 +82,7 @@ func extractBlock(img image.Image, x, y int) [][]float64 {
     return block
 }
 
-func storeBlock(img *image.RGBA, block [][]float64, x, y int) {
+func storeBlock(img *image.RGBA, block [][]float64, x,y,blockSize int) {
     for i := 0; i < blockSize; i++ {
         for j := 0; j < blockSize; j++ {
             val := block[i][j]
@@ -101,15 +97,15 @@ func storeBlock(img *image.RGBA, block [][]float64, x, y int) {
     }
 }
 
-func applyDct(img image.Image) image.Image {
+func applyDct(img image.Image, blockSize int) image.Image {
     bounds := img.Bounds()
     width, height := bounds.Dx(), bounds.Dy()
     dctImg := image.NewRGBA(bounds)
     for y := 0; y < height; y += blockSize {
         for x := 0; x < width; x += blockSize {
-            block := extractBlock(img, x, y)
+            block := extractBlock(img, x, y, blockSize)
             dctBlock := DCT(block)
-            storeBlock(dctImg, dctBlock, x, y)
+            storeBlock(dctImg, dctBlock, x, y, blockSize)
         }
     }
     return dctImg
