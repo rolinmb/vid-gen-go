@@ -825,7 +825,7 @@ func main() {
         false, true, // applyCosine, cosBefore
         false, // invertSrc
         5, // kmcFactor
-        16, // dstBlockSize
+        32, // dstBlockSize
         8, // dctBlockSize
     )
 }
