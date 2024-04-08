@@ -493,8 +493,9 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
-    applyRedux,reduxBefore,edgeDetect,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,invertSrc bool,
-    bitsRedux,kmcFactor,dstBlockSize,dctBlockSize int) {
+    applyRedux,reduxBefore,applyGfire,gfireBefore,edgeDetect,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,invertSrc bool,
+    bitsRedux,kmcFactor,dstBlockSize,dctBlockSize int,
+    gfireTol uint8) {
     _, err := os.Stat(framesDir)
     if err != nil {
         if os.IsNotExist(err) {
@@ -595,6 +596,9 @@ func routineVideoFx(
         if applyRedux && reduxBefore {
             framePng = reduxResolution(framePng, bitsRedux)
         }
+        if applyGfire && gfireBefore {
+            framePng = applyGrassfire(framePng, gfireTol)
+        }
         if edgeDetect && edBefore {
             frameRGBA := image.NewRGBA(framePng.Bounds())
             draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
@@ -668,6 +672,9 @@ func routineVideoFx(
         }
         if applyRedux && !reduxBefore {
             framePng = reduxResolution(framePng, bitsRedux)
+        }
+        if applyGfire && !gfireBefore {
+            framePng = applyGrassfire(framePng, gfireTol)
         }
         if edgeDetect && !edBefore {
             frameRGBA := image.NewRGBA(framePng.Bounds())
@@ -813,8 +820,8 @@ func main() {
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
         "vid_in/work_tv.mp4", // inVidName 
-        "png_out/worktv_4", // framesDir
-        "worktv_4", // outVidName
+        "png_out/worktv_5", // framesDir
+        "worktv_5", // outVidName
         "x+y", // expressionR
         "1.0001", // multFnR 
         "y+x", // expressionG
@@ -829,18 +836,20 @@ func main() {
         1.005, // scaleAdjB
         0.05, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
         0.85, // interpAdj (value represents difference in interp ratio by final frame)
-        true, false, // applyRedux, reduxBefore
+        false, true, // applyRedux, reduxBefore
+        true, false, // applyGfire, gfireBefore
         false, true, // edgeDetect, edBefore
         false, true, // applyKmc, kmcBefore
         false, true, // applyWater, wtrBefore
         false, true, // applyWave, waveBefore
         false, true, // applySine, sinBefore
         false, true, // applyCosine, cosBefore
-        true, false, // applyDither, ditherBefore
+        false, true, // applyDither, ditherBefore
         false, // invertSrc
         2, // bitsRedux
         5, // kmcFactor
         8, // dstBlockSize
         8, // dctBlockSize
+        uint8(128), // gfireTol
     )
 }
