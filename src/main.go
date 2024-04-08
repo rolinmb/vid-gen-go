@@ -493,7 +493,7 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
-    applyRedux,reduxBefore,edgeDetect,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,invertSrc bool,
+    applyRedux,reduxBefore,edgeDetect,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,invertSrc bool,
     bitsRedux,kmcFactor,dstBlockSize,dctBlockSize int) {
     _, err := os.Stat(framesDir)
     if err != nil {
@@ -618,6 +618,9 @@ func routineVideoFx(
         if applyCosine && cosBefore {
             framePng = applyDct(framePng, dctBlockSize)
         }
+        if applyDither && ditherBefore {
+            framePng = fsDither(framePng)
+        }
         newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
         for x := 0; x < framePng.Bounds().Max.X; x++ {
             for y := 0; y < framePng.Bounds().Max.Y; y++ {
@@ -688,6 +691,9 @@ func routineVideoFx(
         }
         if applyCosine && !cosBefore {
             framePng = applyDct(framePng, dctBlockSize)
+        }
+        if applyDither && !ditherBefore {
+            framePng = fsDither(framePng)
         }
         segments := strings.Split(pngFile.Name(), "_")
         idxStr := strings.Replace(segments[len(segments)-1], ".png", "", -1)
@@ -807,13 +813,13 @@ func main() {
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
         "vid_in/work_tv.mp4", // inVidName 
-        "png_out/worktv_2", // framesDir
-        "worktv_2", // outVidName
-        "x-y", // expressionR
+        "png_out/worktv_4", // framesDir
+        "worktv_4", // outVidName
+        "x+y", // expressionR
         "1.0001", // multFnR 
-        "y-x", // expressionG
+        "y+x", // expressionG
         "1.0001", // multFnG
-        "x+y", // expressionB
+        "x-y", // expressionB
         "1.0001", // multFnB
         1.001, // scaleR
         1.005, // scaleAdjR
@@ -830,8 +836,9 @@ func main() {
         false, true, // applyWave, waveBefore
         false, true, // applySine, sinBefore
         false, true, // applyCosine, cosBefore
+        true, false, // applyDither, ditherBefore
         false, // invertSrc
-        1, // bitsRedux
+        2, // bitsRedux
         5, // kmcFactor
         8, // dstBlockSize
         8, // dctBlockSize
