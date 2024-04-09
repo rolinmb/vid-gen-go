@@ -820,8 +820,8 @@ func main() {
     */fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
         "vid_in/work_tv.mp4", // inVidName 
-        "png_out/worktv_5", // framesDir
-        "worktv_5", // outVidName
+        "png_out/worktv_6", // framesDir
+        "worktv_6", // outVidName
         "x+y", // expressionR
         "1.0001", // multFnR 
         "y+x", // expressionG
@@ -834,8 +834,8 @@ func main() {
         1.005, // scaleAdjG
         1.001, // scaleB
         1.005, // scaleAdjB
-        0.05, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.85, // interpAdj (value represents difference in interp ratio by final frame)
+        0.9999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.007, // interpAdj (value represents difference in interp ratio by final frame)
         false, true, // applyRedux, reduxBefore
         true, false, // applyGfire, gfireBefore
         false, true, // edgeDetect, edBefore
