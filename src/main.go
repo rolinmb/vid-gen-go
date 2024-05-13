@@ -837,7 +837,7 @@ func main() {
         0.9999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
         0.007, // interpAdj (value represents difference in interp ratio by final frame)
         false, true, // applyRedux, reduxBefore
-        true, false, // applyGfire, gfireBefore
+        false, true, // applyGfire, gfireBefore
         false, true, // edgeDetect, edBefore
         false, true, // applyKmc, kmcBefore
         false, true, // applyWater, wtrBefore
