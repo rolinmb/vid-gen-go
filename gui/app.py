@@ -25,76 +25,76 @@ class App:
         self.vid_out = tk.Text(self.root, width=100, height=1)
         self.vid_out.grid(row=5)
 
-        self.r_exp_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Expression")
+        self.r_exp_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Expression", fg="black")
         self.r_exp_label.grid(row=6)
         self.r_exp = tk.Text(self.root, width=100, height=1)
         self.r_exp.grid(row=7)
 
-        self.r_exp_mult_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Expression Multiplier")
+        self.r_exp_mult_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Expression Multiplier", fg="black")
         self.r_exp_mult_label.grid(row=8)
         self.r_exp_mult = tk.Text(self.root, width=100, height=1)
         self.r_exp_mult.grid(row=9)
 
-        self.g_exp_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Expression")
+        self.g_exp_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Expression", fg="black")
         self.g_exp_label.grid(row=10)
         self.g_exp = tk.Text(self.root, width=100, height=1)
         self.g_exp.grid(row=11)
 
-        self.g_exp_mult_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Expression Multiplier")
+        self.g_exp_mult_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Expression Multiplier", fg="black")
         self.g_exp_mult_label.grid(row=12)
         self.g_exp_mult = tk.Text(self.root, width=100, height=1)
         self.g_exp_mult.grid(row=13)
 
-        self.b_exp_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Expression")
+        self.b_exp_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Expression", fg="black")
         self.b_exp_label.grid(row=14)
         self.b_exp = tk.Text(self.root, width=100, height=1)
         self.b_exp.grid(row=15)
 
-        self.b_exp_mult_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Expression Multiplier")
+        self.b_exp_mult_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Expression Multiplier", fg="black")
         self.b_exp_mult_label.grid(row=16)
         self.b_exp_mult = tk.Text(self.root, width=100, height=1)
         self.b_exp_mult.grid(row=17)
 
         self.float_vcmd = (self.root.register(self.validate_float_value), '%P')
 
-        self.r_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Scale Multiplier")
+        self.r_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Scale Multiplier", fg="black")
         self.r_scale_label.grid(row=18)
         self.r_scale = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.r_scale.grid(row=19)
 
-        self.r_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Scale Multiplier Variation")
+        self.r_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Scale Multiplier Variation", fg="black")
         self.r_scaleadj_label.grid(row=20)
         self.r_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.r_scaleadj.grid(row=21)
 
-        self.g_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Scale Multiplier")
+        self.g_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Scale Multiplier", fg="black")
         self.g_scale_label.grid(row=22)
         self.g_scale = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.g_scale.grid(row=23)
 
-        self.g_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Scale Multiplier Variation")
+        self.g_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Scale Multiplier Variation", fg="black")
         self.g_scaleadj_label.grid(row=24)
         self.g_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.g_scaleadj.grid(row=25)
 
-        self.b_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Scale Multiplier")
+        self.b_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Scale Multiplier", fg="black")
         self.b_scale_label.grid(row=26)
         self.b_scale = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.b_scale.grid(row=27)
 
-        self.b_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Scale Multiplier Variation")
+        self.b_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Scale Multiplier Variation", fg="black")
         self.b_scaleadj_label.grid(row=28)
         self.b_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.b_scaleadj.grid(row=29)
 
         self.ir_vcmd = (self.root.register(self.validate_interp_ratio), '%P')
 
-        self.interp_ratio_label = tk.Label(self.root, width=100, height=1, text="Original Video : FX Interpolation Ratio")
+        self.interp_ratio_label = tk.Label(self.root, width=100, height=1, text="Original Video : FX Interpolation Ratio", fg="black")
         self.interp_ratio_label.grid(row=30)
         self.interp_ratio = tk.Entry(self.root, validate="key", validatecommand=self.ir_vcmd)
         self.interp_ratio.grid(row=31)
 
-        self.interp_adj_label = tk.Label(self.root, width=100, height=1, text="Interpolation Ratio Variation")
+        self.interp_adj_label = tk.Label(self.root, width=100, height=1, text="Interpolation Ratio Variation", fg="black")
         self.interp_adj_label.grid(row=32)
         self.interp_adj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.interp_adj.grid(row=33)
@@ -174,36 +174,35 @@ class App:
         self.invertsrc_var = tk.IntVar()
         self.invertsrc_cbox = tk.Checkbutton(self.root, text="invertSrc", variable=self.invertsrc_var)
         self.invertsrc_cbox.grid(row=48)
-        """2, // bitsRedux
-        5, // kmcFactor
-        8, // dstBlockSize
-        8, // dctBlockSize
-        uint8(128), // gfireTol"""
+
         self.integer_vcmd = (self.root.register(self.validate_integer_value), '%P')
 
-        self.bits_label = tk.Label(self.root, text="Bits Redux")
+        self.bits_label = tk.Label(self.root, text="Bits Redux", fg="black")
         self.bits_label.grid(row=49)
         self.bits_redux = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
         self.bits_redux.grid(row=50)
 
-        self.kmc_label = tk.Label(self.root, text="K-Means Clustering Factor")
+        self.kmc_label = tk.Label(self.root, text="K-Means Clustering Factor", fg="black")
         self.kmc_label.grid(row=51)
-        self.kmc_redux = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
-        self.kmc_redux.grid(row=52)
+        self.kmc_factor = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
+        self.kmc_factor.grid(row=52)
 
-        self.dstbsize_label = tk.Label(self.root, text="Discrete Sine Transform Block Size")
+        self.dstbsize_label = tk.Label(self.root, text="Discrete Sine Transform Block Size", fg="black")
         self.dstbsize_label.grid(row=53)
         self.dst_bsize = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
         self.dst_bsize.grid(row=54)
 
-        self.dctbsize_label = tk.Label(self.root, text="Discrete Cosine Transform Block Size")
+        self.dctbsize_label = tk.Label(self.root, text="Discrete Cosine Transform Block Size", fg="black")
         self.dctbsize_label.grid(row=55)
         self.dct_bsize = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
         self.dct_bsize.grid(row=56)
 
-        self.gfire_label = tk.Label(self.root, text="Grassfire Algorithm Tolerance")
+        self.gfire_vcmd = (self.root.register(self.validate_gfire), '%P')
+
+        self.gfire_label = tk.Label(self.root, text="Grassfire Algorithm Tolerance", fg="black")
         self.gfire_label.grid(row=57)
-        self.gfire_tol = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
+        self.gfire_tol = tk.Entry(self.root, validate="key", validatecommand=self.gfire_vcmd)
+        self.gfire_tol.grid(row=58)
 
     def validate_float_value(self, value):
         try:
@@ -244,7 +243,24 @@ class App:
                 return False
             return True
         except ValueError:
-            tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you may have not entered a valid numerical value as text input")
+            tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you may have not entered a valid numerical value as text input somewhere")
+            return False
+
+    def validate_gfire(self, value):
+        try:
+            if value.strip() == "":
+                tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered no value")
+                return False
+            int_val = int(value)
+            if int_val < 0:
+                tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered an integer less than 0")
+                return False
+            if int_val > 255:
+                tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered an integer greater than 255")
+                return False
+            return True
+        except ValueError:
+            tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you may have not entered a valid numerical value as text input")
             return False
 
     def generate(self):
@@ -304,7 +320,30 @@ class App:
             float(self.b_scaleadj.get()),
             float(self.interp_ratio.get()),
             float(self.interp_adj.get()),
-          
+            int(self.applyredux_cbox.get()),
+            int(self.reduxbefore_cbox.get()),
+            int(self.applygfire_cbox.get()),
+            int(self.gfirebefore_cbox.get()),
+            int(self.applyed_cbox.get()),
+            int(self.edbefore_cbox.get()),
+            int(self.applykmc_cbox.get()),
+            int(self.kmcbefore_cbox.get()),
+            int(self.applywater_cbox.get()),
+            int(self.waterbefore_cbox.get()),
+            int(self.applywave_cbox.get()),
+            int(self.wavebefore_cbox.get()),
+            int(self.applysine_cbox.get()),
+            int(self.sinebefore_cbox.get()),
+            int(self.applycosine_cbox.get()),
+            int(self.cosinebefore_cbox.get()),
+            int(self.applydither_cbox.get()),
+            int(self.ditherbefore_cbox.get()),
+            int(self.invertsrc_cbox.get()),
+            int(self.bits_redux.get()),
+            int(self.kmc_factor.get()),
+            int(self.dst_bsize.get()),
+            int(self.dct_bsize.get()),
+            int(self.gfire_tol.get()),
         )
         cmd_result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         end = time.time()
