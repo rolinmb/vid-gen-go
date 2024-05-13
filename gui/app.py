@@ -7,7 +7,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("vid-gen-go")
-        self.root.geometry("720x1000")
+        self.root.geometry("900x1000")
 
         self.vid_in_label = tk.Label(self.root, width=100, height=1, text="Video Input Name (from src/vid_in)", fg="black")
         self.vid_in_label.grid(row=0)
@@ -91,13 +91,85 @@ class App:
 
         self.interp_ratio_label = tk.Label(self.root, width=100, height=1, text="Original Video : FX Interpolation Ratio")
         self.interp_ratio_label.grid(row=30)
-        self.interp_raio = tk.Entry(self.root, validate="key", validatecommand=self.ir_vcmd)
-        self.interp_raio.grid(row=31)
+        self.interp_ratio = tk.Entry(self.root, validate="key", validatecommand=self.ir_vcmd)
+        self.interp_ratio.grid(row=31)
 
         self.interp_adj_label = tk.Label(self.root, width=100, height=1, text="Interpolation Ratio Variation")
         self.interp_adj_label.grid(row=32)
         self.interp_adj = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
         self.interp_adj.grid(row=33)
+
+        self.applyredux_var = tk.IntVar()
+        self.applyredux_cbox = tk.Checkbutton(self.root, text="applyRedux", variable=self.applyredux_var)
+        self.applyredux_cbox.grid(row=34)
+
+        self.reduxbefore_var = tk.IntVar()
+        self.reduxbefore_cbox = tk.Checkbutton(self.root, text="reduxBefore", variable=self.reduxbefore_var)
+        self.reduxbefore_cbox.grid(row=35)
+
+        self.applygfire_var = tk.IntVar()
+        self.applygfire_cbox = tk.Checkbutton(self.root, text="applyGfire", variable=self.applyredux_var)
+        self.applygfire_cbox.grid(row=34)
+
+        self.gfirebefore_var = tk.IntVar()
+        self.gfirebefore_cbox = tk.Checkbutton(self.root, text="gfireBefore", variable=self.reduxbefore_var)
+        self.gfirebefore_cbox.grid(row=35)
+
+        self.applyed_var = tk.IntVar()
+        self.applyed_cbox = tk.Checkbutton(self.root, text="edgeDetect", variable=self.applyed_var)
+        self.applyed_cbox.grid(row=36)
+
+        self.edbefore_var = tk.IntVar()
+        self.edbefore_cbox = tk.Checkbutton(self.root, text="edBefore", variable=self.edbefore_var)
+        self.edbefore_cbox.grid(row=37)
+
+        self.applykmc_var = tk.IntVar()
+        self.applykmc_cbox = tk.Checkbutton(self.root, text="applyKmc", variable=self.applykmc_var)
+        self.applykmc_cbox.grid(row=36)
+
+        self.kmcbefore_var = tk.IntVar()
+        self.kmcbefore_cbox = tk.Checkbutton(self.root, text="kmcBefore", variable=self.kmcbefore_var)
+        self.kmcbefore_cbox.grid(row=37)
+
+        self.watershed_var = tk.IntVar()
+        self.watershed_cbox = tk.Checkbutton(self.root, text="applyWater", variable=self.watershed_var)
+        self.watershed_cbox.grid(row=38)
+
+        self.waterbefore_var = tk.IntVar()
+        self.waterbefore_cbox = tk.Checkbutton(self.root, text="waterBefore", variable=self.waterbefore_var)
+        self.waterbefore_cbox.grid(row=39)
+
+        self.applywave_var = tk.IntVar()
+        self.applywave_cbox = tk.Checkbutton(self.root, text="applyWave", variable=self.applywave_var)
+        self.applywave_cbox.grid(row=40)
+
+        self.wavebefore_var = tk.IntVar()
+        self.wavebefore_cbox = tk.Checkbutton(self.root, text="waveBefore", variable=self.wavebefore_var)
+        self.wavebefore_cbox.grid(row=41)
+
+        self.applysine_var = tk.IntVar()
+        self.applysine_cbox = tk.Checkbutton(self.root, text="applySine", variable=self.applysine_var)
+        self.applysine_cbox.grid(row=42)
+
+        self.sinebefore_var = tk.IntVar()
+        self.sinebefore_cbox = tk.Checkbutton(self.root, text="sineBefore", variable=self.sinebefore_var)
+        self.sinebefore_cbox.grid(row=43)
+
+        self.applycosine_var = tk.IntVar()
+        self.applycosine_cbox = tk.Checkbutton(self.root, text="applyCosine", variable=self.applycosine_var)
+        self.applycosine_cbox.grid(row=44)
+
+        self.cosinebefore_var = tk.IntVar()
+        self.cosinebefore_cbox = tk.Checkbutton(self.root, text="cosineBefore", variable=self.cosinebefore_var)
+        self.cosinebefore_cbox.grid(row=45)
+
+        self.applydither_var = tk.IntVar()
+        self.applydither_cbox = tk.Checkbutton(self.root, text="applyDither", variable=self.applydither_var)
+        self.applydither_cbox.grid(row=46)
+
+        self.ditherbefore_var = tk.IntVar()
+        self.ditherbefore_cbox = tk.Checkbutton(self.root, text="ditherBefore", variable=self.ditherbefore_var)
+        self.ditherbefore_cbox.grid(row=47)
 
     def validate_scale_value(self, value):
         try:
