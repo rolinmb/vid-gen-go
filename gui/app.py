@@ -8,7 +8,10 @@ class App:
         self.root = root
         self.root.title("vid-gen-go")
         self.root.geometry("720x1280")
-
+        # TODO: Play around with row and columnds in .grid() to find a better param layout on the gui
+        """self.root.columnconfigure(0, weight=1)
+        for i in range(0, 64):
+            self.root.rowconfigure(i, weight=1)"""
         self.vid_in_label = tk.Label(self.root, width=50, height=1, text="Video Input Name (from src/vid_in)", fg="black")
         self.vid_in_label.grid(row=0)
         # TODO: make a selection list of video names in src/vid_in instead of having to enter exact vid name
