@@ -55,36 +55,36 @@ class App:
         self.b_exp_mult = tk.Text(self.root, width=100, height=1)
         self.b_exp_mult.grid(row=17)
 
-        self.scale_vcmd = (self.root.register(self.validate_scale_value), '%P')
+        self.float_vcmd = (self.root.register(self.validate_float_value), '%P')
 
         self.r_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Scale Multiplier")
         self.r_scale_label.grid(row=18)
-        self.r_scale = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
+        self.r_scale = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.r_scale.grid(row=19)
 
         self.r_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Red Scale Multiplier Variation")
         self.r_scaleadj_label.grid(row=20)
-        self.r_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
+        self.r_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.r_scaleadj.grid(row=21)
 
         self.g_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Scale Multiplier")
         self.g_scale_label.grid(row=22)
-        self.g_scale = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
+        self.g_scale = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.g_scale.grid(row=23)
 
         self.g_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Green Scale Multiplier Variation")
         self.g_scaleadj_label.grid(row=24)
-        self.g_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
+        self.g_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.g_scaleadj.grid(row=25)
 
         self.b_scale_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Scale Multiplier")
         self.b_scale_label.grid(row=26)
-        self.b_scale = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
+        self.b_scale = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.b_scale.grid(row=27)
 
         self.b_scaleadj_label = tk.Label(self.root, width=100, height=1, text="Pixel Blue Scale Multiplier Variation")
         self.b_scaleadj_label.grid(row=28)
-        self.b_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
+        self.b_scaleadj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.b_scaleadj.grid(row=29)
 
         self.ir_vcmd = (self.root.register(self.validate_interp_ratio), '%P')
@@ -96,7 +96,7 @@ class App:
 
         self.interp_adj_label = tk.Label(self.root, width=100, height=1, text="Interpolation Ratio Variation")
         self.interp_adj_label.grid(row=32)
-        self.interp_adj = tk.Entry(self.root, validate="key", validatecommand=self.scale_vcmd)
+        self.interp_adj = tk.Entry(self.root, validate="key", validatecommand=self.float_vcmd)
         self.interp_adj.grid(row=33)
 
         self.applyredux_var = tk.IntVar()
@@ -174,8 +174,38 @@ class App:
         self.invertsrc_var = tk.IntVar()
         self.invertsrc_cbox = tk.Checkbutton(self.root, text="invertSrc", variable=self.invertsrc_var)
         self.invertsrc_cbox.grid(row=48)
+        """2, // bitsRedux
+        5, // kmcFactor
+        8, // dstBlockSize
+        8, // dctBlockSize
+        uint8(128), // gfireTol"""
+        self.integer_vcmd = (self.root.register(self.validate_integer_value), '%P')
 
-    def validate_scale_value(self, value):
+        self.bits_label = tk.Label(self.root, text="Bits Redux")
+        self.bits_label.grid(row=49)
+        self.bits_redux = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
+        self.bits_redux.grid(row=50)
+
+        self.kmc_label = tk.Label(self.root, text="K-Means Clustering Factor")
+        self.kmc_label.grid(row=51)
+        self.kmc_redux = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
+        self.kmc_redux.grid(row=52)
+
+        self.dstbsize_label = tk.Label(self.root, text="Discrete Sine Transform Block Size")
+        self.dstbsize_label.grid(row=53)
+        self.dst_bsize = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
+        self.dst_bsize.grid(row=54)
+
+        self.dctbsize_label = tk.Label(self.root, text="Discrete Cosine Transform Block Size")
+        self.dctbsize_label.grid(row=55)
+        self.dct_bsize = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
+        self.dct_bsize.grid(row=56)
+
+        self.gfire_label = tk.Label(self.root, text="Grassfire Algorithm Tolerance")
+        self.gfire_label.grid(row=57)
+        self.gfire_tol = tk.Entry(self.root, validate="key", validatecommand=self.integer_vcmd)
+
+    def validate_float_value(self, value):
         try:
             if value.strip() == "":
                 tk.messagebox.showerror("Invalid float Input", "Please enter a valid float f; you entered no value")
@@ -183,7 +213,7 @@ class App:
             float(value)
             return True
         except ValueError:
-            tk.messagebox.showerror("Invalid float Input", "Please enter a valid float f; you may have not entered a numerical value as text input somewhere")
+            tk.messagebox.showerror("Invalid float Input", "Please enter a valid float f; you may have not entered a valid numerical value as text input somewhere")
             return False
 
     def validate_interp_ratio(self, value):
@@ -200,7 +230,21 @@ class App:
                 return False
             return True
         except ValueError:
-            tk.messagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you may have not entered a numerical value as text input")
+            tk.messagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you may have not entered a valid numerical value as text input")
+            return False
+        
+    def validate_integer_value(self, value):
+        try:
+            if value.strip() == "":
+                tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you entered no value")
+                return False
+            int_val = int(value)
+            if int_val < 0:
+                tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you entered an integer less than 0")
+                return False
+            return True
+        except ValueError:
+            tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you may have not entered a valid numerical value as text input")
             return False
 
     def generate(self):
