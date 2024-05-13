@@ -7,7 +7,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("vid-gen-go")
-        self.root.geometry("900x1000")
+        self.root.geometry("720x1280")
 
         self.vid_in_label = tk.Label(self.root, width=100, height=1, text="Video Input Name (from src/vid_in)", fg="black")
         self.vid_in_label.grid(row=0)
@@ -170,6 +170,10 @@ class App:
         self.ditherbefore_var = tk.IntVar()
         self.ditherbefore_cbox = tk.Checkbutton(self.root, text="ditherBefore", variable=self.ditherbefore_var)
         self.ditherbefore_cbox.grid(row=47)
+
+        self.invertsrc_var = tk.IntVar()
+        self.invertsrc_cbox = tk.Checkbutton(self.root, text="invertSrc", variable=self.invertsrc_var)
+        self.invertsrc_cbox.grid(row=48)
 
     def validate_scale_value(self, value):
         try:
