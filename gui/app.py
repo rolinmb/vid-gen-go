@@ -2,6 +2,7 @@ import subprocess
 import time
 import os
 import tkinter as tk
+from tkinter import ttk
 import tkinter.messagebox as tkmessagebox
 
 class App:
@@ -14,13 +15,24 @@ class App:
         self.root.columnconfigure(1, weight=1)
         """for i in range(0, 33):
             self.root.rowconfigure(i, weight=1)"""
-        # TODO: make a selection list of video names in src/vid_in instead of having to enter exact vid name
         self.vid_in_label = tk.Label(self.root, width=50, height=1, text="Video Input Name (from src/vid_in)", fg="black")
         #self.vid_in_label.grid(row=0)
-        self.vid_in_label.grid(row=0, column=0)        
-        self.vid_in = tk.Text(self.root, width=40, height=1)
+        self.vid_in_label.grid(row=0, column=0)
+        og_dir = os.getcwd()
+        os.chdir(og_dir+"/src/vid_in")
+        self.video_name_options = os.listdir(os.getcwd())
+        os.chdir(og_dir)
+        if len(self.video_name_options) == 0:
+            self.video_name_options = ["No Videos To Select"]
+        self.vid_in_var = tk.StringVar()
+        self.vid_in_var.set(self.video_name_options[0])
+        self.vid_in_drop = ttk.Combobox(self.root, textvariable=self.vid_in_var, values=self.video_name_options)
+        #self.vid_in_drop.grid(row=1)
+        self.vid_in_drop.grid(row=0, column=1)
+        self.vid_in_drop.bind("<<ComboboxSelected>>", self.handle_vid_in_select)
+        #self.vid_in = tk.Text(self.root, width=40, height=1)
         #self.vid_in.grid(row=1)
-        self.vid_in.grid(row=0, column=1)
+        #self.vid_in.grid(row=0, column=1)
 
         self.frames_dir_label = tk.Label(self.root, width=50, height=1, text="Output Directory Name for Output Video Frames", fg="black")
         #self.frames_dir_label.grid(row=2)
@@ -276,6 +288,9 @@ class App:
         #self.gen_btn.grid(row=63)
         self.gen_btn.grid(row=32, column=0)
 
+    def handle_vid_in_select(self, event):
+        self.vid_in_var.set(self.video_name_options[self.vid_in_drop.current()])
+
     def validate_float_value(self, value):
         try:
             if value.strip() == "":
@@ -337,7 +352,8 @@ class App:
 
     def generate(self):
         cmd_str = "tkmain.exe %s %s %s %s %s %s %s %s %s %f %f %f %f %f %f %f %f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"%(
-            "vid_in/"+self.vid_in.get("1.0", tk.END).strip(), # will eventually replace this by a tkinter select option of files in src/vid_in
+            #"vid_in/"+self.vid_in.get("1.0", tk.END).strip(),
+            "vid_in/"+self.vid_in_var.get(),
             "png_out/"+self.frames_dir.get("1.0", tk.END).strip(),
             self.vid_out.get("1.0", tk.END).strip(),
             self.r_exp.get("1.0", tk.END).strip(),
