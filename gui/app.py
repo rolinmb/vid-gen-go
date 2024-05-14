@@ -148,12 +148,12 @@ class App:
         self.reduxbefore_cbox.grid(row=17, column=1)
 
         self.applygfire_var = tk.IntVar()
-        self.applygfire_cbox = tk.Checkbutton(self.root, text="applyGfire", variable=self.applyredux_var)
+        self.applygfire_cbox = tk.Checkbutton(self.root, text="applyGfire", variable=self.applygfire_var)
         #self.applygfire_cbox.grid(row=36)
         self.applygfire_cbox.grid(row=18, column=0)
 
         self.gfirebefore_var = tk.IntVar()
-        self.gfirebefore_cbox = tk.Checkbutton(self.root, text="gfireBefore", variable=self.reduxbefore_var)
+        self.gfirebefore_cbox = tk.Checkbutton(self.root, text="gfireBefore", variable=self.gfirebefore_var)
         #self.gfirebefore_cbox.grid(row=37)
         self.gfirebefore_cbox.grid(row=18, column=1)
 
@@ -370,9 +370,9 @@ class App:
         8, // dctBlockSize
         uint8(128), // gfireTol
         """
-        start = time.time()
-        main_dir = os.getcwd()
-        os.chdir("../src")
+        #start = time.time()
+        #main_dir = os.getcwd()
+        os.chdir("src")
         cmd_str = "go build -o main && ./main %s %s %s %s %s %s %s %s %s %f %f %f %f %f %f %f %f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"%(
             "vid_in/"+self.vid_in.get("1.0", tk.END).strip(), # will eventually replace this by a tkinter select option of files in src/vid_in
             "png_out/"+self.frames_dir.get("1.0", tk.END).strip(),
@@ -417,7 +417,7 @@ class App:
             int(self.gfire_tol.get()),
         )
         print(cmd_str)
-        cmd_result = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        """cmd_result = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         end = time.time()
         os.chdir(main_dir)
         if cmd_result.returncode == 0:
@@ -426,8 +426,8 @@ class App:
         else:
             print('Go building or execution failed with error:')
             print(cmd_result.stderr)
-        print(f'app.generate() ./src/main execution time: {round(end-start, 2)} sec')
-
+        print(f'app.generate() ./src/main execution time: {round(end-start, 2)} sec')"""
+        
     def run(self):
         self.root.mainloop()
 
