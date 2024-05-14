@@ -983,7 +983,7 @@ func main() {
         false // invertSrc
     )
     */
-    fmt.Println("[main.go : routineVideoFx() started]")
+    /*fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
         "vid_in/work_tv.mp4", // inVidName 
         "png_out/worktv_6", // framesDir
@@ -1017,7 +1017,7 @@ func main() {
         8, // dstBlockSize
         8, // dctBlockSize
         uint8(128), // gfireTol
-    )
-    /*fmt.Println("[main.go : routineVideoFxTk() started]")
-    routineVideoFxTk()*/
+    )*/
+    fmt.Println("[main.go : routineVideoFxTk() started]")
+    routineVideoFxTk()
 }

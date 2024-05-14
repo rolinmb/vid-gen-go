@@ -336,7 +336,7 @@ class App:
             return False
 
     def generate(self):
-        cmd_str = "go build -o main && ./main %s %s %s %s %s %s %s %s %s %f %f %f %f %f %f %f %f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"%(
+        cmd_str = "tkmain.exe %s %s %s %s %s %s %s %s %s %f %f %f %f %f %f %f %f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"%(
             "vid_in/"+self.vid_in.get("1.0", tk.END).strip(), # will eventually replace this by a tkinter select option of files in src/vid_in
             "png_out/"+self.frames_dir.get("1.0", tk.END).strip(),
             self.vid_out.get("1.0", tk.END).strip(),
@@ -380,21 +380,18 @@ class App:
             int(self.gfire_tol.get()),
         )
         print(cmd_str)
-        """start = time.time()
         main_dir = os.getcwd()
-        print(main_dir)
-        os.chdir("src")
-        print(os.getcwd())
+        os.chdir(main_dir+"/src")
+        start = time.time()
         cmd_result = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        end = time.time()
+        print(f'app.generate() ./src/main execution time: {round(time.time()-start, 2)} sec')
         os.chdir(main_dir)
         if cmd_result.returncode == 0:
-            print('Go built and executed successfully\nOutput:')
+            print('Go built and executed successfully:')
             print(cmd_result.stdout)
         else:
             print('Go building or execution failed with error:')
             print(cmd_result.stderr)
-        print(f'app.generate() ./src/main execution time: {round(end-start, 2)} sec')"""
         
     def run(self):
         self.root.mainloop()
