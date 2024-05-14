@@ -336,44 +336,6 @@ class App:
             return False
 
     def generate(self):
-        """
-        Example parameters to pass to routineVideoFx()
-        "vid_in/work_tv.mp4", // inVidName 
-        "png_out/worktv_6", // framesDir
-        "worktv_6", // outVidName
-        "x+y", // expressionR
-        "1.0001", // multFnR 
-        "y+x", // expressionG
-        "1.0001", // multFnG
-        "x-y", // expressionB
-        "1.0001", // multFnB
-        1.001, // scaleR
-        1.005, // scaleAdjR
-        1.001, // scaleG
-        1.005, // scaleAdjG
-        1.001, // scaleB
-        1.005, // scaleAdjB
-        0.9999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.007, // interpAdj (value represents difference in interp ratio by final frame)
-        false, true, // applyRedux, reduxBefore
-        false, true, // applyGfire, gfireBefore
-        false, true, // edgeDetect, edBefore
-        false, true, // applyKmc, kmcBefore
-        false, true, // applyWater, wtrBefore
-        false, true, // applyWave, waveBefore
-        false, true, // applySine, sinBefore
-        false, true, // applyCosine, cosBefore
-        false, true, // applyDither, ditherBefore
-        false, // invertSrc
-        2, // bitsRedux
-        5, // kmcFactor
-        8, // dstBlockSize
-        8, // dctBlockSize
-        uint8(128), // gfireTol
-        """
-        #start = time.time()
-        #main_dir = os.getcwd()
-        os.chdir("src")
         cmd_str = "go build -o main && ./main %s %s %s %s %s %s %s %s %s %f %f %f %f %f %f %f %f %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"%(
             "vid_in/"+self.vid_in.get("1.0", tk.END).strip(), # will eventually replace this by a tkinter select option of files in src/vid_in
             "png_out/"+self.frames_dir.get("1.0", tk.END).strip(),
@@ -418,7 +380,12 @@ class App:
             int(self.gfire_tol.get()),
         )
         print(cmd_str)
-        """cmd_result = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        """start = time.time()
+        main_dir = os.getcwd()
+        print(main_dir)
+        os.chdir("src")
+        print(os.getcwd())
+        cmd_result = subprocess.run(cmd_str, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         end = time.time()
         os.chdir(main_dir)
         if cmd_result.returncode == 0:

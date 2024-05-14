@@ -742,6 +742,171 @@ func routineVideoFx(
     fmt.Printf("\nroutineVideoFx(): recombineCmd Output:\n\n%s\n(Successfully created 'src/vid_out/%s.mp4')\n", string(recombineOut), outVidName)
 }
 
+func routineVideoFxTk() {
+    rScale, err := strconv.ParseFloat(os.Args[10], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating rScale float64 from string:", err)
+    }
+    rScaleAdj, err := strconv.ParseFloat(os.Args[11], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating rScaleAdj float64 from string:", err)
+    }
+    gScale, err := strconv.ParseFloat(os.Args[12], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating gScale float64 from string:", err)
+    }
+    gScaleAdj, err := strconv.ParseFloat(os.Args[13], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating gScaleAdj float64 from string:", err)
+    }
+    bScale, err := strconv.ParseFloat(os.Args[14], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating bScale float64 from string:", err)
+    }
+    bScaleAdj, err := strconv.ParseFloat(os.Args[15], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating bScaleAdj float64 from string:", err)
+    }
+    ir, err := strconv.ParseFloat(os.Args[16], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating ir float64 from string:", err)
+    }
+    irAdj, err := strconv.ParseFloat(os.Args[17], 64)
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating irAdj float64 from string:", err)
+    }
+    useRedux, err := strconv.Atoi(os.Args[18])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useRedux int from string:", err)
+    }
+    reduxBfr, err := strconv.Atoi(os.Args[19])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating reduxBfr int from string:", err)
+    }
+    useGfire, err := strconv.Atoi(os.Args[20])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useGfire int from string:", err)
+    }
+    gfireBfr, err := strconv.Atoi(os.Args[21])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating gfireBfr int from string:", err)
+    }
+    useEd, err := strconv.Atoi(os.Args[22])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useEd int from string:", err)
+    }
+    edBfr, err := strconv.Atoi(os.Args[23])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating edBfr int from string:", err)
+    }
+    useKmc, err := strconv.Atoi(os.Args[24])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useKmc int from string:", err)
+    }
+    kmcBfr, err := strconv.Atoi(os.Args[25])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating kmcBfr int from string:", err)
+    }
+    useWater, err := strconv.Atoi(os.Args[26])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useWater int from string:", err)
+    }
+    waterBfr, err := strconv.Atoi(os.Args[27])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating waterBfr int from string:", err)
+    }
+    useWave, err := strconv.Atoi(os.Args[28])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useWave int from string:", err)
+    }
+    waveBfr, err := strconv.Atoi(os.Args[29])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating waveBfr int from string:", err)
+    }
+    useSine, err := strconv.Atoi(os.Args[30])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useSine int from string:", err)
+    }
+    sineBfr, err := strconv.Atoi(os.Args[31])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating sineBfr int from string:", err)
+    }
+    useCosine, err := strconv.Atoi(os.Args[32])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useCosine int from string:", err)
+    }
+    cosineBfr, err := strconv.Atoi(os.Args[33])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating cosineBfr int from string:", err)
+    }
+    useDither, err := strconv.Atoi(os.Args[34])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating useDither int from string:", err)
+    }
+    ditherBfr, err := strconv.Atoi(os.Args[35])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating ditherBfr int from string:", err)
+    }
+    shouldInvert, err := strconv.Atoi(os.Args[36])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating shouldInvert int from string:", err)
+    }
+    reduxQty, err := strconv.Atoi(os.Args[37])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating reduxQty int from string:", err)
+    }
+    kmcSize, err := strconv.Atoi(os.Args[38])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating kmcSize int from string:", err)
+    }
+    dstSize, err := strconv.Atoi(os.Args[39])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating dstSize int from string:", err)
+    }
+    dctSize, err := strconv.Atoi(os.Args[40])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating dctSize int from string:", err)
+    }
+    gfireTolerance, err := strconv.Atoi(os.Args[41])
+    if err != nil {
+        log.Fatal("routineVideoFxTk(): Error creating gfireTolerance int from string:", err)
+    }
+    routineVideoFx(
+        os.Args[1], // inVidName 
+        os.Args[2], // framesDir
+        os.Args[3], // outVidName
+        os.Args[4], // expressionR
+        os.Args[5], // multFnR 
+        os.Args[6], // expressionG
+        os.Args[7], // multFnG
+        os.Args[8], // expressionB
+        os.Args[9], // multFnB
+        rScale, // scaleR
+        rScaleAdj, // scaleAdjR
+        gScale, // scaleG
+        gScaleAdj, // scaleAdjG
+        bScale, // scaleB
+        bScaleAdj, // scaleAdjB
+        ir, // interpRatio
+        irAdj, // interpAdj
+        useRedux == 1, reduxBfr == 1, // applyRedux, reduxBefore
+        useGfire == 1, gfireBfr == 1, // applyGfire, gfireBefore
+        useEd == 1, edBfr == 1, // edgeDetect, edBefore
+        useKmc == 1, kmcBfr == 1, // applyKmc, kmcBefore
+        useWater == 1, waterBfr == 1, // applyWater, wtrBefore
+        useWave == 1, waveBfr == 1, // applyWave, waveBefore
+        useSine == 1, sineBfr == 1, // applySine, sinBefore
+        useCosine == 1, cosineBfr == 1, // applyCosine, cosBefore
+        useDither == 1, ditherBfr == 1, // applyDither, ditherBefore
+        shouldInvert == 1, // invertSrc
+        reduxQty, // bitsRedux
+        kmcSize, // kmcFactor
+        dstSize, // dstBlockSize
+        dctSize, // dctBlockSize
+        uint8(gfireTolerance), // gfireTol
+    )
+}
+
 func main() {
     /*fmt.Println("[main.go : routineSimple() started]")
     routineSimple(
@@ -817,7 +982,8 @@ func main() {
         false, // edgeDetect
         false // invertSrc
     )
-    */fmt.Println("[main.go : routineVideoFx() started]")
+    */
+    fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
         "vid_in/work_tv.mp4", // inVidName 
         "png_out/worktv_6", // framesDir
@@ -852,4 +1018,6 @@ func main() {
         8, // dctBlockSize
         uint8(128), // gfireTol
     )
+    /*fmt.Println("[main.go : routineVideoFxTk() started]")
+    routineVideoFxTk()*/
 }
