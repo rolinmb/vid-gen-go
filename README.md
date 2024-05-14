@@ -7,7 +7,7 @@ TODO:
 
 Build and run go program executable (from src): go build -o main && ./main
 
-Run tkinter GUI program (from src): go build -o main && cd .. && python gui/main.py 
+Build and run tkinter GUI program (from src): go build -o tkmain.exe && cd .. && python gui/main.py 
 
 Example functions (so I can remove comments from getPixelColorOne and getPixelColorTwo):
     // Hypotochoid
