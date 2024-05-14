@@ -2,6 +2,7 @@ import subprocess
 import time
 import os
 import tkinter as tk
+import tkinter.messagebox as tkmessagebox
 
 class App:
     def __init__(self, root):
@@ -278,60 +279,60 @@ class App:
     def validate_float_value(self, value):
         try:
             if value.strip() == "":
-                tk.messagebox.showerror("Invalid float Input", "Please enter a valid float f; you entered no value")
+                tkmessagebox.showerror("Invalid float Input", "Please enter a valid float f; you entered no value")
                 return False
             float(value)
             return True
         except ValueError:
-            tk.messagebox.showerror("Invalid float Input", "Please enter a valid float f; you may have not entered a valid numerical value as text input somewhere")
+            tkmessagebox.showerror("Invalid float Input", "Please enter a valid float f; you may have not entered a valid numerical value as text input somewhere")
             return False
 
     def validate_interp_ratio(self, value):
         try:
             if value.strip() == "":
-                tk.messagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you entered no value")
+                tkmessagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you entered no value")
                 return False
             float(value)
             if value > 1.0:
-                tk.messagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you entered a float greater than 1.0")
+                tkmessagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you entered a float greater than 1.0")
                 return False
             if value < 0.0:
-                tk.messagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you entered a float less than 0.0")
+                tkmessagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you entered a float less than 0.0")
                 return False
             return True
         except ValueError:
-            tk.messagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you may have not entered a valid numerical value as text input")
+            tkmessagebox.showerror("Invalid interp ratio Input", "For interp ratio, please enter a valid float f such that: 0.0 <= f <= 1.0; you may have not entered a valid numerical value as text input")
             return False
         
     def validate_integer_value(self, value):
         try:
             if value.strip() == "":
-                tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you entered no value")
+                tkmessagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you entered no value")
                 return False
             int_val = int(value)
             if int_val < 0:
-                tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you entered an integer less than 0")
+                tkmessagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you entered an integer less than 0")
                 return False
             return True
         except ValueError:
-            tk.messagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you may have not entered a valid numerical value as text input somewhere")
+            tkmessagebox.showerror("Invalid integer Input", "Please enter a valid integer i such that: i >= 0; you may have not entered a valid numerical value as text input somewhere")
             return False
 
     def validate_gfire(self, value):
         try:
             if value.strip() == "":
-                tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered no value")
+                tkmessagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered no value")
                 return False
             int_val = int(value)
             if int_val < 0:
-                tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered an integer less than 0")
+                tkmessagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered an integer less than 0")
                 return False
             if int_val > 255:
-                tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered an integer greater than 255")
+                tkmessagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you entered an integer greater than 255")
                 return False
             return True
         except ValueError:
-            tk.messagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you may have not entered a valid numerical value as text input")
+            tkmessagebox.showerror("Invalid Grassfire Algorithm integer Input", "Please enter a valid integer i such that: 0 <= i <= 255; you may have not entered a valid numerical value as text input")
             return False
 
     def generate(self):
@@ -391,25 +392,25 @@ class App:
             float(self.b_scaleadj.get()),
             float(self.interp_ratio.get()),
             float(self.interp_adj.get()),
-            int(self.applyredux_cbox.get()),
-            int(self.reduxbefore_cbox.get()),
-            int(self.applygfire_cbox.get()),
-            int(self.gfirebefore_cbox.get()),
-            int(self.applyed_cbox.get()),
-            int(self.edbefore_cbox.get()),
-            int(self.applykmc_cbox.get()),
-            int(self.kmcbefore_cbox.get()),
-            int(self.watershed_cbox.get()),
-            int(self.waterbefore_cbox.get()),
-            int(self.applywave_cbox.get()),
-            int(self.wavebefore_cbox.get()),
-            int(self.applysine_cbox.get()),
-            int(self.sinebefore_cbox.get()),
-            int(self.applycosine_cbox.get()),
-            int(self.cosinebefore_cbox.get()),
-            int(self.applydither_cbox.get()),
-            int(self.ditherbefore_cbox.get()),
-            int(self.invertsrc_cbox.get()),
+            int(self.applyredux_var.get()),
+            int(self.reduxbefore_var.get()),
+            int(self.applygfire_var.get()),
+            int(self.gfirebefore_var.get()),
+            int(self.applyed_var.get()),
+            int(self.edbefore_var.get()),
+            int(self.applykmc_var.get()),
+            int(self.kmcbefore_var.get()),
+            int(self.watershed_var.get()),
+            int(self.waterbefore_var.get()),
+            int(self.applywave_var.get()),
+            int(self.wavebefore_var.get()),
+            int(self.applysine_var.get()),
+            int(self.sinebefore_var.get()),
+            int(self.applycosine_var.get()),
+            int(self.cosinebefore_var.get()),
+            int(self.applydither_var.get()),
+            int(self.ditherbefore_var.get()),
+            int(self.invertsrc_var.get()),
             int(self.bits_redux.get()),
             int(self.kmc_factor.get()),
             int(self.dst_bsize.get()),
