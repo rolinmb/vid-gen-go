@@ -988,20 +988,20 @@ func main() {
         "vid_in/heart_light.mp4", // inVidName 
         "png_out/heart0", // framesDir
         "heart0", // outVidName
-        "sin(0.1 * x) + cos(0.1 * y)", // expressionR
-        "1.1", // multFnR 
-        "sin(0.1 * x) + cos(0.1 * y)", // expressionG
-        "1.1", // multFnG
-        "sin(0.1 * x) + cos(0.1 * y)", // expressionB
-        "1.1", // multFnB
-        1.05, // scaleR
-        1.0, // scaleAdjR
-        1.05, // scaleG
-        1.0, // scaleAdjG
-        1.05, // scaleB
-        1.0, // scaleAdjB
+        "x*y*(((x/10)+(y/5))+tan(1.5*x*y))", // expressionR
+        "1.001", // multFnR 
+        "y*y*(((y/10)+(x/5))+cos(2*x))", // expressionG
+        "1.001", // multFnG
+        "x*x*(((x/10)+(y/5))+sin(2*y))", // expressionB
+        "1.001", // multFnB
+        1.0005, // scaleR
+        1.0001, // scaleAdjR
+        1.0005, // scaleG
+        1.0001, // scaleAdjG
+        1.0005, // scaleB
+        1.0001, // scaleAdjB
         0.999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.0014, // interpAdj (value represents difference in interp ratio by final frame)
+        -0.049, // interpAdj (value represents difference in interp ratio by final frame)
         false, true, // applyRedux, reduxBefore
         false, true, // applyGfire, gfireBefore
         false, true, // applyEd, edBefore
