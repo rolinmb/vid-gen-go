@@ -2,8 +2,6 @@ Generating animations from .png images using golang and ffmpeg
 
 TODO:
     - src/main.go: In routineVideoFx(); may need to detect source FPS of inVideoName so when running recombineCmd we rebuild the .mp4 at the original framerate
-    - gui/app.py: List the video names in src/vid_in (excluding the .mp4 extension and parent directories) as a tk selection list element rather than having the user type the input video name
-    - after implementing the gui to fit the parameters of routineVideoFx() in src/main.go; create a new function in src/main.go to accept parameters as command line arguments to a compiled go program (need to edit main in src/main.go to call this new funciton with command line arguments too)
 
 Build and run go program executable (from src): go build -o main && ./main
 
