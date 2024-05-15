@@ -493,7 +493,7 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
-    applyRedux,reduxBefore,applyGfire,gfireBefore,edgeDetect,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,invertSrc bool,
+    applyRedux,reduxBefore,applyGfire,gfireBefore,applyEd,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,invertSrc bool,
     bitsRedux,kmcFactor,dstBlockSize,dctBlockSize int,
     gfireTol uint8) {
     _, err := os.Stat(framesDir)
@@ -599,7 +599,7 @@ func routineVideoFx(
         if applyGfire && gfireBefore {
             framePng = applyGrassfire(framePng, gfireTol)
         }
-        if edgeDetect && edBefore {
+        if applyEd && edBefore {
             frameRGBA := image.NewRGBA(framePng.Bounds())
             draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
             framePng = getEdges(frameRGBA)
@@ -676,7 +676,7 @@ func routineVideoFx(
         if applyGfire && !gfireBefore {
             framePng = applyGrassfire(framePng, gfireTol)
         }
-        if edgeDetect && !edBefore {
+        if applyEd && !edBefore {
             frameRGBA := image.NewRGBA(framePng.Bounds())
             draw.Draw(frameRGBA, framePng.Bounds(), framePng, framePng.Bounds().Min, draw.Over)
             framePng = getEdges(frameRGBA)
@@ -891,7 +891,7 @@ func routineVideoFxTk() {
         irAdj, // interpAdj
         useRedux == 1, reduxBfr == 1, // applyRedux, reduxBefore
         useGfire == 1, gfireBfr == 1, // applyGfire, gfireBefore
-        useEd == 1, edBfr == 1, // edgeDetect, edBefore
+        useEd == 1, edBfr == 1, // applyEd, edBefore
         useKmc == 1, kmcBfr == 1, // applyKmc, kmcBefore
         useWater == 1, waterBfr == 1, // applyWater, wtrBefore
         useWave == 1, waveBfr == 1, // applyWave, waveBefore
@@ -985,26 +985,26 @@ func main() {
     */
     fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/work_tv.mp4", // inVidName 
-        "png_out/worktv_6", // framesDir
-        "worktv_6", // outVidName
-        "x+y", // expressionR
-        "1.0001", // multFnR 
-        "y+x", // expressionG
-        "1.0001", // multFnG
-        "x-y", // expressionB
-        "1.0001", // multFnB
-        1.001, // scaleR
-        1.005, // scaleAdjR
-        1.001, // scaleG
-        1.005, // scaleAdjG
-        1.001, // scaleB
-        1.005, // scaleAdjB
-        0.9999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.007, // interpAdj (value represents difference in interp ratio by final frame)
+        "vid_in/heart_light.mp4", // inVidName 
+        "png_out/heart0", // framesDir
+        "heart0", // outVidName
+        "sin(0.1 * x) + cos(0.1 * y)", // expressionR
+        "1.1", // multFnR 
+        "sin(0.1 * x) + cos(0.1 * y)", // expressionG
+        "1.1", // multFnG
+        "sin(0.1 * x) + cos(0.1 * y)", // expressionB
+        "1.1", // multFnB
+        1.05, // scaleR
+        1.0, // scaleAdjR
+        1.05, // scaleG
+        1.0, // scaleAdjG
+        1.05, // scaleB
+        1.0, // scaleAdjB
+        0.999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.0014, // interpAdj (value represents difference in interp ratio by final frame)
         false, true, // applyRedux, reduxBefore
         false, true, // applyGfire, gfireBefore
-        false, true, // edgeDetect, edBefore
+        false, true, // applyEd, edBefore
         false, true, // applyKmc, kmcBefore
         false, true, // applyWater, wtrBefore
         false, true, // applyWave, waveBefore
