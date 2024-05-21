@@ -71,7 +71,7 @@ func upscaleResolution(src *image.RGBA, newWidth,newHeight int) *image.RGBA {
             c10 := src.At(min(gxi+1, srcWidth-1), gyi).(color.RGBA)
             c01 := src.At(gxi, min(gyi+1, srcHeight-1)).(color.RGBA)
             c11 := src.At(min(gxi+1, srcWidth-1), min(gyi+1, srcHeight-1)).(color.RGBA)
-            result.set(x, y interpolateColor(c00, c10, c01, c11, gx-float64(gxi), gy-float64(gyi)))
+            result.Set(x, y, interpolateColor(c00, c10, c01, c11, gx-float64(gxi), gy-float64(gyi)))
         }
     }
     return result
