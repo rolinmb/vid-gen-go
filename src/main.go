@@ -985,23 +985,23 @@ func main() {
     */
     fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/heart_light.mp4", // inVidName 
-        "png_out/heart0", // framesDir
-        "heart0", // outVidName
-        "x*y*(((x/10)+(y/5))+tan(1.5*x*y))", // expressionR
-        "1.001", // multFnR 
-        "y*y*(((y/10)+(x/5))+cos(2*x))", // expressionG
-        "1.001", // multFnG
-        "x*x*(((x/10)+(y/5))+sin(2*y))", // expressionB
-        "1.001", // multFnB
+        "vid_in/shaumburg_sunrise.mp4", // inVidName 
+        "png_out/shaumburgsunrise2", // framesDir
+        "shaumburgsunrise2", // outVidName
+        "sqrt(x*x+y*y)", // expressionR
+        "1.05", // multFnR
+        "sqrt(x*x+y*y)", // expressionG
+        "1.05", // multFnG
+        "sqrt(x*x+y*y)", // expressionB
+        "1.05", // multFnB
         1.0005, // scaleR
         1.0001, // scaleAdjR
         1.0005, // scaleG
         1.0001, // scaleAdjG
         1.0005, // scaleB
         1.0001, // scaleAdjB
-        0.999, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.049, // interpAdj (value represents difference in interp ratio by final frame)
+        0.001, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.9989, // interpAdj (value represents difference in interp ratio by final frame)
         false, true, // applyRedux, reduxBefore
         false, true, // applyGfire, gfireBefore
         false, true, // applyEd, edBefore
@@ -1012,10 +1012,10 @@ func main() {
         false, true, // applyCosine, cosBefore
         false, true, // applyDither, ditherBefore
         false, // invertSrc
-        2, // bitsRedux
-        5, // kmcFactor
-        8, // dstBlockSize
-        8, // dctBlockSize
+        7, // bitsRedux
+        4, // kmcFactor
+        14, // dstBlockSize
+        14, // dctBlockSize
         uint8(128), // gfireTol
     )
     /*fmt.Println("[main.go : routineVideoFxTk() started]")
