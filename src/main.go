@@ -985,37 +985,37 @@ func main() {
     */
     fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/shaumburg_sunrise.mp4", // inVidName 
-        "png_out/shaumburgsunrise2", // framesDir
-        "shaumburgsunrise2", // outVidName
-        "sqrt(x*x+y*y)", // expressionR
-        "1.05", // multFnR
-        "sqrt(x*x+y*y)", // expressionG
-        "1.05", // multFnG
-        "sqrt(x*x+y*y)", // expressionB
-        "1.05", // multFnB
-        1.0005, // scaleR
+        "vid_in/starting_fire.mp4", // inVidName
+        "png_out/startingfire2", // framesDir
+        "startingfire2", // outVidName
+        "((x+y)*(sin(0.1*x)+cos(0.1*y)))/(cos(x*y) + x + y + 1)", // expressionR
+        "1.01", // multFnR
+        "((x+y)*(sin(0.1*x)+cos(0.1*y)))/(tan(x*y) + x + y + 1)", // expressionG
+        "1.01", // multFnG
+        "((x+y)*(sin(0.1*x)+cos(0.1*y)))/(sin(x*y) + x + y + 1)", // expressionB
+        "1.01", // multFnB
+        1.001, // scaleR
         1.0001, // scaleAdjR
-        1.0005, // scaleG
+        1.001, // scaleG
         1.0001, // scaleAdjG
-        1.0005, // scaleB
+        1.001, // scaleB
         1.0001, // scaleAdjB
-        0.001, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.9989, // interpAdj (value represents difference in interp ratio by final frame)
-        false, true, // applyRedux, reduxBefore
+        0.9, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.09, // interpAdj (value represents difference in interp ratio by final frame)
+        true, true, // applyRedux, reduxBefore
         false, true, // applyGfire, gfireBefore
         false, true, // applyEd, edBefore
         false, true, // applyKmc, kmcBefore
         false, true, // applyWater, wtrBefore
         false, true, // applyWave, waveBefore
-        false, true, // applySine, sinBefore
+        true, true, // applySine, sinBefore
         false, true, // applyCosine, cosBefore
         false, true, // applyDither, ditherBefore
         false, // invertSrc
         7, // bitsRedux
         4, // kmcFactor
-        14, // dstBlockSize
-        14, // dctBlockSize
+        3, // dstBlockSize
+        3, // dctBlockSize
         uint8(128), // gfireTol
     )
     /*fmt.Println("[main.go : routineVideoFxTk() started]")
