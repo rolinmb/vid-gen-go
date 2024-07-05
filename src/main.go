@@ -492,7 +492,7 @@ func routineOverlay(
 
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
-    scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj float64,
+    scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj,distAmpSrc,distFreqSrc,distPhaseSrc,distAmpGen,distFreqGen,distPhaseGen float64,
     applyRedux,reduxBefore,applyGfire,gfireBefore,applyEd,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,invertSrc bool,
     bitsRedux,kmcFactor,dstBlockSize,dctBlockSize int,
     gfireTol uint8) {
@@ -585,13 +585,14 @@ func routineVideoFx(
     }
     adjFactor := interpAdj / float64(len(frameFiles))
     for _, pngFile := range frameFiles {
-        rawFrame, err := os.Open(framesDir+"/"+pngFile.Name()) 
+        srcFileName := framesDir+"/"+pngFIle.Name()
+        rawFrame, err := os.Open(srcFileName) 
         if err != nil {
-        log.Fatalf("routineVideoFx(): Error loading frame 'src/%s/%s' raw: %v", framesDir, pngFile.Name(), err)
+        log.Fatalf("routineVideoFx(): Error loading raw src frame 'src/%s': %v", srcFileName, err)
         }
         framePng, _, err := image.Decode(rawFrame)
         if err != nil {
-        log.Fatalf("routineVideoFx(): Error decoding raw frame 'src/%s/%s' with go/image: %v", framesDir, pngFile.Name(), err)
+        log.Fatalf("routineVideoFx(): Error decoding raw src frame 'src/%s/%s': %v", srcFileName, err)
         }
         if applyRedux && reduxBefore {
             framePng = reduxResolution(framePng, bitsRedux)
@@ -628,7 +629,9 @@ func routineVideoFx(
         newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
         for x := 0; x < framePng.Bounds().Max.X; x++ {
             for y := 0; y < framePng.Bounds().Max.Y; y++ {
-                vars := map[string]int{ "x": x, "y": y }
+                dxs,dys := distort(x, y, framePng.Bounds().Max.X, framePng.Bounds().Max.Y, distAmpSrc, distFreqSrc, distPhaseSrc)
+                dxg,dyg := distort(x, y, framePng.Bounds().Max.X, framePng.Bounds().Max.Y, distAmpGen, distFreqGen, distPhaseGen)
+                vars := map[string]int{ "x": dxg, "y": dyg }
                 rt, err := evalExprTreeNode(EXPR, vars)
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed Rgb expression: %v", err)
@@ -656,7 +659,7 @@ func routineVideoFx(
                 if err != nil {
                     log.Fatalf("routineVideoFx(): Error evaulating parsed rgB multiplier expression: %v", err)
                 }
-                rs,gs,bs, _ := framePng.At(x, y).RGBA()
+                rs,gs,bs, _ := framePng.At(dxs, dys).RGBA()
                 if invertSrc {
                     rs = 255 - rs
                     gs = 255 - gs
@@ -716,7 +719,7 @@ func routineVideoFx(
         newFrame.Close()
         //fmt.Printf("\nroutineVideoFx(): Successfully created FX'd frame 'src/%s/%s'\n", framesDir, newFname)
         rawFrame.Close()
-        err = os.Remove(framesDir+"/"+pngFile.Name())
+        err = os.Remove(srcFileName)
         if err != nil {
             log.Fatalf("routineVideoFx(): Failed to remove source frame 'src/%s/%s': %v", framesDir, pngFile.Name(), err)
         }
@@ -889,6 +892,12 @@ func routineVideoFxTk() {
         bScaleAdj, // scaleAdjB
         ir, // interpRatio
         irAdj, // interpAdj
+        1.0, // distAmpSrc // TODO: Add these params to the user interface in gui app (aka tkmain.exe)
+        1.0, // distFreqSrc
+        0.0, // distPhaseSrc
+        1.0, // distAmpGen
+        1.0, // distFreqGen
+        0.0, // distPhaseGen
         useRedux == 1, reduxBfr == 1, // applyRedux, reduxBefore
         useGfire == 1, gfireBfr == 1, // applyGfire, gfireBefore
         useEd == 1, edBfr == 1, // applyEd, edBefore
@@ -985,14 +994,14 @@ func main() {
     */
     fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/starting_fire.mp4", // inVidName
-        "png_out/startingfire2", // framesDir
-        "startingfire2", // outVidName
-        "((x+y)*(sin(0.1*x)+cos(0.1*y)))/(cos(x*y) + x + y + 1)", // expressionR
+        "vid_in/waves_ttdance.mp4", // inVidName
+        "png_out/waves0", // framesDir
+        "waves_ttedit", // outVidName
+        "(x * y * sin(3*x) * sin(4*y) * cos(x+y) * (1 / (x*x + y*y + 1))) - (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionR
         "1.01", // multFnR
-        "((x+y)*(sin(0.1*x)+cos(0.1*y)))/(tan(x*y) + x + y + 1)", // expressionG
+        "(x * y * sin(3*x) * sin(4*y) * cos(x+y) * (1 / (x*x + y*y + 1))) - (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionG
         "1.01", // multFnG
-        "((x+y)*(sin(0.1*x)+cos(0.1*y)))/(sin(x*y) + x + y + 1)", // expressionB
+        "(x * y * sin(3*x) * sin(4*y) * cos(x+y) * (1 / (x*x + y*y + 1))) - (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionB
         "1.01", // multFnB
         1.001, // scaleR
         1.0001, // scaleAdjR
@@ -1000,9 +1009,15 @@ func main() {
         1.0001, // scaleAdjG
         1.001, // scaleB
         1.0001, // scaleAdjB
-        0.9, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.09, // interpAdj (value represents difference in interp ratio by final frame)
-        true, true, // applyRedux, reduxBefore
+        0.5, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.49, // interpAdj (value represents difference in interp ratio by final frame)
+        1.0, // distAmpSrc
+        1.0, // distFreqSrc
+        0.0, // distPhaseSrc
+        1.0, // distAmpGen
+        1.0, // distFreqGen
+        0.0, // distPhaseGen
+        false, true, // applyRedux, reduxBefore
         false, true, // applyGfire, gfireBefore
         false, true, // applyEd, edBefore
         false, true, // applyKmc, kmcBefore
@@ -1014,8 +1029,8 @@ func main() {
         false, // invertSrc
         7, // bitsRedux
         4, // kmcFactor
-        3, // dstBlockSize
-        3, // dctBlockSize
+        2, // dstBlockSize
+        2, // dctBlockSize
         uint8(128), // gfireTol
     )
     /*fmt.Println("[main.go : routineVideoFxTk() started]")
