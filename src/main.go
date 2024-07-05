@@ -493,9 +493,11 @@ func routineOverlay(
 func routineVideoFx(
     inVidName,framesDir,outVidName,expressionR,multFnR,expressionG,multFnG,expressionB,multFnB string,
     scaleR,scaleAdjR,scaleG,scaleAdjG,scaleB,scaleAdjB,interpRatio,interpAdj,distAmpSrc,distFreqSrc,distPhaseSrc,distAmpGen,distFreqGen,distPhaseGen float64,
-    applyRedux,reduxBefore,applyGfire,gfireBefore,applyEd,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,invertSrc bool,
+    applyRedux,reduxBefore,applyGfire,gfireBefore,applyEd,edBefore,applyKmc,kmcBefore,applyWater,wtrBefore,applyWave,waveBefore,applySine,sinBefore,applyCosine,cosBefore,applyDither,ditherBefore,applyBitFx,bitFxBefore,invertSrc bool,
     bitsRedux,kmcFactor,dstBlockSize,dctBlockSize int,
-    gfireTol uint8) {
+    gfireTol uint8,
+    bitFxDelays []int,
+    bitFxAtts []float64) {
     _, err := os.Stat(framesDir)
     if err != nil {
         if os.IsNotExist(err) {
@@ -585,7 +587,7 @@ func routineVideoFx(
     }
     adjFactor := interpAdj / float64(len(frameFiles))
     for _, pngFile := range frameFiles {
-        srcFileName := framesDir+"/"+pngFIle.Name()
+        srcFileName := framesDir+"/"+pngFile.Name()
         rawFrame, err := os.Open(srcFileName) 
         if err != nil {
         log.Fatalf("routineVideoFx(): Error loading raw src frame 'src/%s': %v", srcFileName, err)
@@ -625,6 +627,9 @@ func routineVideoFx(
         }
         if applyDither && ditherBefore {
             framePng = fsDither(framePng)
+        }
+        if applyBitFx && bitFxBefore {
+            framePng = bitFx(framePng, bitFxDelays, bitFxAtts)
         }
         newPng := image.NewRGBA(image.Rect(0, 0, framePng.Bounds().Max.X, framePng.Bounds().Max.Y))
         for x := 0; x < framePng.Bounds().Max.X; x++ {
@@ -704,6 +709,9 @@ func routineVideoFx(
         }
         if applyDither && !ditherBefore {
             framePng = fsDither(framePng)
+        }
+        if applyBitFx && !bitFxBefore {
+            framePng = bitFx(framePng, bitFxDelays, bitFxAtts)
         }
         segments := strings.Split(pngFile.Name(), "_")
         idxStr := strings.Replace(segments[len(segments)-1], ".png", "", -1)
@@ -907,12 +915,15 @@ func routineVideoFxTk() {
         useSine == 1, sineBfr == 1, // applySine, sinBefore
         useCosine == 1, cosineBfr == 1, // applyCosine, cosBefore
         useDither == 1, ditherBfr == 1, // applyDither, ditherBefore
+        false, true, // applyBmpFx, bmpFxBerfore // TODO: Implement in python tk gui too
         shouldInvert == 1, // invertSrc
         reduxQty, // bitsRedux
         kmcSize, // kmcFactor
         dstSize, // dstBlockSize
         dctSize, // dctBlockSize
         uint8(gfireTolerance), // gfireTol
+        []int{ 0 }, // bitFxDelays
+        []float64{ 0.0 }, // bitFxAtts
     )
 }
 
@@ -1023,15 +1034,18 @@ func main() {
         false, true, // applyKmc, kmcBefore
         false, true, // applyWater, wtrBefore
         false, true, // applyWave, waveBefore
-        true, true, // applySine, sinBefore
+        false, true, // applySine, sinBefore
         false, true, // applyCosine, cosBefore
         false, true, // applyDither, ditherBefore
+        false, true, // applyBitFx, bitFxBefore
         false, // invertSrc
         7, // bitsRedux
         4, // kmcFactor
         2, // dstBlockSize
         2, // dctBlockSize
         uint8(128), // gfireTol
+        []int{5, 10, 15}, // bmpDelays
+        []float64{0.69, 0.333, 0.1}, // bmpAtts
     )
     /*fmt.Println("[main.go : routineVideoFxTk() started]")
     routineVideoFxTk()*/
