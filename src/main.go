@@ -1005,29 +1005,29 @@ func main() {
     */
     fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/waves_ttdance.mp4", // inVidName
-        "png_out/waves0", // framesDir
-        "waves_ttedit", // outVidName
-        "(x * y * sin(3*x) * sin(4*y) * cos(x+y) * (1 / (x*x + y*y + 1))) - (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionR
-        "1.01", // multFnR
-        "(x * y * sin(3*x) * sin(4*y) * cos(x+y) * (1 / (x*x + y*y + 1))) - (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionG
-        "1.01", // multFnG
-        "(x * y * sin(3*x) * sin(4*y) * cos(x+y) * (1 / (x*x + y*y + 1))) - (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionB
-        "1.01", // multFnB
-        1.001, // scaleR
+        "vid_in/deer.mp4", // inVidName
+        "png_out/deer0", // framesDir
+        "deer0", // outVidName
+        "(x + y + sin(3*x) + sin(4*y) + cos(x+y) + (1 / (x*x + y*y + 1))) * (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionR
+        "x+y", // multFnR
+        "(x + y + sin(3*x) + sin(4*y) + cos(x+y) + (1 / (x*x + y*y + 1))) * (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionG
+        "y", // multFnG
+        "(x + y + sin(3*x) + sin(4*y) + cos(x+y) + (1 / (x*x + y*y + 1))) * (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionB
+        "x", // multFnB
+        1.02, // scaleR
         1.0001, // scaleAdjR
-        1.001, // scaleG
+        1.03, // scaleG
         1.0001, // scaleAdjG
-        1.001, // scaleB
+        1.01, // scaleB
         1.0001, // scaleAdjB
-        0.5, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        0.49, // interpAdj (value represents difference in interp ratio by final frame)
-        1.0, // distAmpSrc
-        1.0, // distFreqSrc
-        0.0, // distPhaseSrc
-        1.0, // distAmpGen
-        1.0, // distFreqGen
-        0.0, // distPhaseGen
+        0.995, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        -0.005, // interpAdj (value represents difference in interp ratio by final frame)
+        0.5, // distAmpSrc
+        100.0, // distFreqSrc
+        1., // distPhaseSrc
+        33.3, // distAmpGen
+        0.5, // distFreqGen
+        1.0, // distPhaseGen
         false, true, // applyRedux, reduxBefore
         false, true, // applyGfire, gfireBefore
         false, true, // applyEd, edBefore
@@ -1037,15 +1037,15 @@ func main() {
         false, true, // applySine, sinBefore
         false, true, // applyCosine, cosBefore
         false, true, // applyDither, ditherBefore
-        false, true, // applyBitFx, bitFxBefore
+        true, true, // applyBitFx, bitFxBefore
         false, // invertSrc
         7, // bitsRedux
         4, // kmcFactor
         2, // dstBlockSize
         2, // dctBlockSize
         uint8(128), // gfireTol
-        []int{5, 10, 15}, // bmpDelays
-        []float64{0.69, 0.333, 0.1}, // bmpAtts
+        []int{5, 10, 15, 20, 25, 30, 35, 40}, // bitDelays
+        []float64{0.69, 0.333, 0.5, 0.25, 0.69, 0.85, 0.5, 0.75}, // bitAtts
     )
     /*fmt.Println("[main.go : routineVideoFxTk() started]")
     routineVideoFxTk()*/
