@@ -17,7 +17,7 @@ func bitFx(pngSrc image.Image, delays []int, atts []float64) *image.RGBA {
                 nx := x - delays[i]
                 ny := y - delays[i]
                 if nx >= pngBounds.Min.X && ny >= pngBounds.Min.Y {
-                    c := newRgba.At(x, y)
+                    c := newRgba.At(nx, ny)
                     cr,cg,cb,ca := c.RGBA()
                     aten := atts[i]
                     r += aten * float64(cr)

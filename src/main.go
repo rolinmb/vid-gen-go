@@ -922,8 +922,8 @@ func routineVideoFxTk() {
         dstSize, // dstBlockSize
         dctSize, // dctBlockSize
         uint8(gfireTolerance), // gfireTol
-        []int{ 0 }, // bitFxDelays
-        []float64{ 0.0 }, // bitFxAtts
+        []int{0}, // bitFxDelays
+        []float64{0.0}, // bitFxAtts
     )
 }
 
@@ -1005,30 +1005,30 @@ func main() {
     */
     fmt.Println("[main.go : routineVideoFx() started]")
     routineVideoFx(
-        "vid_in/deer.mp4", // inVidName
-        "png_out/deer0", // framesDir
-        "deer0", // outVidName
-        "(x + y + sin(3*x) + sin(4*y) + cos(x+y) + (1 / (x*x + y*y + 1))) * (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionR
-        "x+y", // multFnR
-        "(x + y + sin(3*x) + sin(4*y) + cos(x+y) + (1 / (x*x + y*y + 1))) * (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionG
-        "y", // multFnG
-        "(x + y + sin(3*x) + sin(4*y) + cos(x+y) + (1 / (x*x + y*y + 1))) * (x*y*sqrt(x*x + y*y)) - (1 / sqrt(x*x*x + y*y*y))", // expressionB
-        "x", // multFnB
-        1.02, // scaleR
-        1.0001, // scaleAdjR
-        1.03, // scaleG
-        1.0001, // scaleAdjG
-        1.01, // scaleB
-        1.0001, // scaleAdjB
-        0.995, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
-        -0.005, // interpAdj (value represents difference in interp ratio by final frame)
-        0.5, // distAmpSrc
-        100.0, // distFreqSrc
-        1., // distPhaseSrc
-        33.3, // distAmpGen
-        0.5, // distFreqGen
-        1.0, // distPhaseGen
-        false, true, // applyRedux, reduxBefore
+        "vid_in/lightningpa.mp4", // inVidName
+        "png_out/ants0", // framesDir
+        "lightningpa0", // outVidName
+        "((x & y) ^ cos(x+y) + 1) ^ (7 ^ x) + 1", // expressionR
+        "(x ^ y) + 1", // multFnR
+        "((y &^ x) ^ sin(x+y) + 1) ^ (7 ^ y) + 1", // expressionG
+        "x + 1", // multFnG
+        "((x | y) ^ tan(x+y) + 1) ^ (x ^ y) + 1", // expressionB
+        "y + 1", // multFnB
+        1.0, // scaleR
+        1.0, // scaleAdjR
+        1.0, // scaleG
+        1.0, // scaleAdjG
+        1.0, // scaleB
+        1.0, // scaleAdjB
+        0.9, // interpRatio (ratio < 0.5 => less of inVidName; ratio > 0.5 => more of inVidName)
+        0.077, // interpAdj (value represents difference in interp ratio by final frame)
+        1.0, // distAmpSrc
+        0.0, // distFreqSrc
+        0.0, // distPhaseSrc
+        5.1, // distAmpGen
+        5.77, // distFreqGen
+        5.33, // distPhaseGen
+        true, true, // applyRedux, reduxBefore
         false, true, // applyGfire, gfireBefore
         false, true, // applyEd, edBefore
         false, true, // applyKmc, kmcBefore
@@ -1037,15 +1037,15 @@ func main() {
         false, true, // applySine, sinBefore
         false, true, // applyCosine, cosBefore
         false, true, // applyDither, ditherBefore
-        true, true, // applyBitFx, bitFxBefore
+        true, false, // applyBitFx, bitFxBefore
         false, // invertSrc
         7, // bitsRedux
         4, // kmcFactor
         2, // dstBlockSize
         2, // dctBlockSize
         uint8(128), // gfireTol
-        []int{5, 10, 15, 20, 25, 30, 35, 40}, // bitDelays
-        []float64{0.69, 0.333, 0.5, 0.25, 0.69, 0.85, 0.5, 0.75}, // bitAtts
+        []int{10, 20, 30, 40, 50, 60, 70, 80}, // bitDelays
+        []float64{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8}, // bitAtts
     )
     /*fmt.Println("[main.go : routineVideoFxTk() started]")
     routineVideoFxTk()*/
